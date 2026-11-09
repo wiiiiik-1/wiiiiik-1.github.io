@@ -126,6 +126,26 @@ npm run dev
 
 ---
 
+## 复现图解与数值实验
+
+文章里的示意图和模拟曲线不是截屏，是脚本画出来的，配色跟随主题。它们只依赖 Python（matplotlib + numpy），和站点构建无关。
+
+```bash
+python -m pip install -r scripts/figures/requirements.txt
+python scripts/figures/make-figures.py     # 重新生成 public/images/bandit-figures/ 下的六张图
+```
+
+| 路径 | 作用 |
+|---|---|
+| `scripts/figures/make-figures.py` | 六张图；固定随机种子，`--only` 单画一张、`--out` 换输出目录、`--lang en` 强制英文标注 |
+| `scripts/figures/README.md` | 每张图用在哪一节、想说明什么；为什么 regret 曲线要跑 2000 次 |
+| `scripts/sim/etc-worked-example.py` | 导论里「押错 12.8%、平均 regret 4.05」那个例子的 20 万次模拟 |
+| `scripts/sim/bandit-sim.py` | 贪心 / ETC / UCB1 在三个场景下的 regret 对比 |
+
+中文标注需要系统里有中文字体（微软雅黑 / 苹方 / Noto CJK），一个都没有时脚本自动改出英文标注。
+
+---
+
 ## 部署到 GitHub Pages
 
 ### 推荐：使用用户主页仓库
@@ -173,6 +193,10 @@ https://wiiiiik-1.github.io/lecture-notes/
 ├─ public/
 │  ├─ images/              # 文章图片
 │  └─ favicon.svg
+├─ scripts/
+│  ├─ new-note.mjs         # npm run new 用的新建笔记脚本
+│  ├─ figures/             # 图解生成（Python + matplotlib）
+│  └─ sim/                 # 文章里引用的数值实验
 ├─ .github/workflows/deploy.yml
 ├─ astro.config.mjs
 └─ package.json

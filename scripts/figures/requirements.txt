@@ -1,0 +1,4 @@
+# 图解生成依赖（Python 3.10+）
+# 装法：python -m pip install -r scripts/figures/requirements.txt
+matplotlib>=3.8
+numpy>=1.26
