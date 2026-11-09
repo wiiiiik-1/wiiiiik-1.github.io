@@ -99,6 +99,20 @@ cmd /c mklink /J "C:\Users\Latus\Documents\deepseek-harness\default-workspace" "
 node .\tools\remap.mjs --home "$env:USERPROFILE\.dsh" --map "C:\Users\Latus=>D:\Latus" --dry-run
 ```
 
+### 清掉空壳会话
+
+迁移或反复试装时，`.dsh\sessions\<工作区>\` 下会留下一些只有 header 和权限记录、没有一句对话的空壳会话：占地方，也让会话列表变脏。
+
+```powershell
+# 先看会删哪些（默认 dry-run，只打印）
+pwsh -NoProfile -File .\tools\prune-stub-sessions.ps1
+
+# 确认后真删：会话目录 + projcache 条目 + workspace.json 里的 id（删除前自动备份）
+pwsh -NoProfile -File .\tools\prune-stub-sessions.ps1 -Apply
+```
+
+判定标准是「header 之后没有任何对话记录，且总记录数 ≤ 6」；脚本自己解 zstd 帧来判断，不依赖 DSH 是否在运行。**要在普通 PowerShell 窗口里跑**——DSH 沙箱不允许写 `~\.dsh`。
+
 ---
 
 ## 方案 C：只要存档，不要求会话能续聊
