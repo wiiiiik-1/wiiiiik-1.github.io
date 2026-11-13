@@ -25,10 +25,11 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: 22
+          cache: npm
 
-      # 仓库里没有 package-lock.json，所以用 npm install（npm ci 会直接失败）
+      # 仓库里有 package-lock.json，用 npm ci 保证可复现
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
       - name: Build site
         run: npm run build
