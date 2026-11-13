@@ -37,6 +37,9 @@ jobs:
           SITE_URL: https://wiiiiik-1.github.io
           BASE_PATH: /
 
+      - name: Check internal anchors
+        run: node scripts/check-anchors.mjs dist
+
       - name: Configure Pages
         uses: actions/configure-pages@v6
         with:

@@ -136,7 +136,7 @@ $$\mathbb{P}(\bar X-\mu\ge\epsilon)\le e^{-t\epsilon}\prod_i\mathbb{E}e^{t(X_i-\
 
 **证明**。对 $n=2$：$\mathbb{P}(A\cup B)=\mathbb{P}(A)+\mathbb{P}(B)-\mathbb{P}(A\cap B)\le\mathbb{P}(A)+\mathbb{P}(B)$。对 $n$ 用归纳。不需要独立性。
 
-**用在哪**：[第 3 篇 §3.3](/posts/from-etc-to-ucb/#33-为什么取-delta-dfrac1n2)、B4 的双边化。
+**用在哪**：[第 3 篇 §3.3](/posts/from-etc-to-ucb/#33-为什么取-δn21)、B4 的双边化。
 
 ### B8 Jensen 不等式
 
@@ -239,7 +239,7 @@ $$f_T(t)=\frac{\Gamma\!\big(\frac{\nu+1}{2}\big)}{\sqrt{\nu\pi}\,\Gamma\!\big(\f
 
 中间只剩一个 Gamma 积分 $\int_0^{\infty}v^{\frac{\nu+1}{2}-1}e^{-v(1+t^{2}/\nu)/2}\,\mathrm dv$。$\nu\to\infty$ 时收敛到标准正态。
 
-**用在哪**：[数理统计基础 §2.2](/posts/statistics-foundations/#22-chi2tf)。
+**用在哪**：[数理统计基础 §2.2](/posts/statistics-foundations/#22-χ2tf)。
 
 ### D4 Cramér–Rao 下界
 
@@ -249,7 +249,7 @@ $$f_T(t)=\frac{\Gamma\!\big(\frac{\nu+1}{2}\big)}{\sqrt{\nu\pi}\,\Gamma\!\big(\f
 
 $$1=\mathrm{Cov}^{2}(\hat\theta,S)\le\mathrm{Var}(\hat\theta)\,\mathrm{Var}(S).$$
 
-**用在哪**：[数理统计基础 §4.3](/posts/statistics-foundations/#43-cramer-rao-下界)。
+**用在哪**：[数理统计基础 §4.3](/posts/statistics-foundations/#43-cramérrao-下界)。
 
 ### D5 Beta–Bernoulli 共轭
 
