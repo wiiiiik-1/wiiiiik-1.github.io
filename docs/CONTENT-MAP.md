@@ -34,6 +34,7 @@
 | `math-toolbox.md` | 数学工具箱：写概率推导之前该备好的六件事 | 2026-11-01 | 340 | 9.0k | – | – | 1（复用） |
 | `probability-foundations.md` | 概率论基础：从公理到中心极限定理 | 2026-11-02 | 330 | 10.4k | – | – | 0 |
 | `statistics-foundations.md` | 数理统计基础：估计、区间与检验 | 2026-11-03 | 400 | 10.3k | – | – | 0 |
+| `proof-appendix.md` | 附录：公式与证明索引 | 2026-11-04 | 430 | 19.5k | – | – | 0 |
 | `bandits-series-intro.md` | 系列导论：从一道暴雨预警，到假设检验与多臂老虎机 | 2026-11-06 | 384 | 9.4k | ✅ | – | 1 |
 | `hypothesis-testing-and-estimation.md` | 假设检验与参数估计：两份讲义的中英对照精读笔记 | 2026-10-23 | 1597 | 36.7k | ✅ | 3 图 | 0 |
 | `multi-armed-bandits-intro.md` | 多臂老虎机入门：从 Regret 到 Explore-Then-Commit | 2026-10-30 | 610 | 16.8k | – | 10 页 | 2 |
@@ -41,7 +42,7 @@
 | `thompson-sampling.md` | 从 UCB 到 Thompson Sampling：贝叶斯学习、随机化与渐进最优 | 2026-11-13 | 656 | 21.0k | – | 14 页 | 7 |
 
 图片资产：`public/images/` 下共 **5 个目录、约 10.4 MB**
-（`bandit-figures` 1.3 MB / 13 张 + `.keep`，`hypothesis-testing-and-estimation` 1.0 MB / 3 张，`multi-armed-bandits-intro` 2.2 MB / 11 张，`from-etc-to-ucb` 3.0 MB / 14 张，`thompson-sampling` 2.9 MB / 14 张）。
+（`bandit-figures` 1.4 MB / 14 张 + `.keep`，`hypothesis-testing-and-estimation` 1.0 MB / 3 张，`multi-armed-bandits-intro` 2.2 MB / 11 张，`from-etc-to-ucb` 3.0 MB / 14 张，`thompson-sampling` 2.9 MB / 14 张）。
 
 ---
 
@@ -129,6 +130,14 @@
 
 ---
 
+## 4.5 证明附录
+
+`proof-appendix.md` 把「正文只留结论、推导集中归档」做实：A 分析工具（4 条）、B 概率不等式（10 条）、C 期望与方差（4 条）、D 数理统计（8 条）、E 序贯决策（6 条），F 节列出**不证的结论与理由**（CLT、Berry–Esseen、Lai–Robbins、Azuma、GLM 渐近）。
+
+每条固定四段：条件 / 结论 / 证明 / 用在哪。正文里凡是「引用不证」的结论都要链到这里；附录每条也要标出它在哪一节被用到。
+
+**锚点提醒**：KaTeX 会改写含公式的标题，实际 id 往往不是手算的那个（如 `43-定量tiδi216logn`、`22-χ2tf`）。写链接前先 build，再从 `dist` 里抄 id；CI 的 `check-anchors.mjs` 会挡住坏链接。
+
 ## 5. 图解系统
 
 - 生成脚本：`scripts/figures/make-figures.py`（13 张，Ink & Paper 配色，固定随机种子）
@@ -149,6 +158,7 @@
 |---|---|
 | 看构建是否成功 | `node work/wait-run.mjs <sha>` 或 `node work/poll-run.mjs`（GitHub API） |
 | 检查线上图是否 200 | `node work/check-ts.mjs`（还顺带查 KaTeX 数量、残留定界符、互链、首页收录） |
+| 站内链接是否全可达 | `node scripts/check-anchors.mjs dist`（**已接进 CI**，build 后跑；坏一条就 red） |
 | 本地无法用 `web_fetch` | 本站域名解析到 198.18.x（TUN 假 IP），一律用 `node` 的 `fetch` 走 `work/*.mjs` |
 | 本地构建 | `node node_modules/astro/astro.js build`（没有 `.bin`，要走这个入口）。沙箱下会 `spawn EPERM`（Vite 的 realpath 优化），需要一次 `danger-full-access`；同理 `npm install` 也要提权 |
 | 锚点校验 | build 后逐条比对 `src/data/knowledge-graph.ts` 里的 `href` 与 `dist` 里的 `id` |
