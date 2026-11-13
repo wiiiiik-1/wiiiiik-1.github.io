@@ -8,6 +8,7 @@ export const SITE = {
   nav: [
     { label: "笔记", href: "/posts/" },
     { label: "拓扑", href: "/map/" },
+    { label: "附录", href: "/posts/proof-appendix/" },
     { label: "标签", href: "/tags/" },
     { label: "归档", href: "/archive/" },
     { label: "关于", href: "/about/" },

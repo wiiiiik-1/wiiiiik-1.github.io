@@ -4,6 +4,7 @@ import BaseLayout from "./BaseLayout.astro";
 import Toc from "../components/Toc.astro";
 import KnowledgeMap from "../components/KnowledgeMap.astro";
 import ReadingRoute from "../components/ReadingRoute.astro";
+import { subgraphFor } from "../data/knowledge-graph";
 import type { Post } from "../utils";
 import { formatDate, readingTime } from "../utils";
 
@@ -16,6 +17,7 @@ interface Props {
 const { post, prev, next } = Astro.props;
 const { Content, headings } = await render(post);
 const minutes = readingTime(post.body ?? "");
+const hasMap = subgraphFor(post.id).nodes.length > 0;
 ---
 
 <BaseLayout
@@ -72,13 +74,21 @@ const minutes = readingTime(post.body ?? "");
           <ReadingRoute current={post.id} />
         </section>
       ) : (
-        <section class="post-map" aria-labelledby="post-map-title">
-          <div class="post-map-head">
-            <h2 id="post-map-title">本篇在拓扑中的位置</h2>
-            <p>朱砂色是这一篇直接讲的节点，其余是它的前置；点方块可跳到对应小节。</p>
-          </div>
-          <KnowledgeMap post={post.id} compact />
-        </section>
+        hasMap && (
+          <section class="post-map" aria-labelledby="post-map-title">
+            <div class="post-map-head">
+              <h2 id="post-map-title">本篇在拓扑中的位置</h2>
+              <p>朱砂色是这一篇直接讲的节点，其余是它的前置；点方块可跳到对应小节。</p>
+            </div>
+            <KnowledgeMap post={post.id} compact />
+          </section>
+        )
+      )}
+
+      {post.id !== "proof-appendix" && (
+        <p class="post-appendix">
+          这一篇里的公式推导，收在 <a href="/posts/proof-appendix/">附录：公式与证明索引</a>。
+        </p>
       )}
 
       {post.data.pdf && (
@@ -174,5 +184,13 @@ const minutes = readingTime(post.body ?? "");
       font-size: 0.8rem;
       color: var(--muted);
     }
+
+    .post-appendix {
+      margin: 1.2rem 0 0;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .post-appendix a { color: var(--accent); }
   </style>
 </BaseLayout>
