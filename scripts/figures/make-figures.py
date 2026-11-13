@@ -621,6 +621,57 @@ def fig_regret_over_logn(out_dir: Path, trials: int = 150, seed: int = 9) -> Non
     save(fig, out_dir, "regret-over-logn.png")
 
 
+
+# ---------------------------------------------------------------- 图 14：尾界对比
+def fig_tail_bounds(out_dir: Path) -> None:
+    """Chebyshev、Hoeffding 与真实尾概率（n=100，Bernoulli(1/2)）的对数坐标对比。
+
+    想说明两件事：
+      1. 同样只用「有界 + 独立」，Hoeffding 比 Chebyshev 快了一个数量级以上；
+      2. 快的原因是 ε 在指数上（e^{-nε²}）而不是在分母上（1/(nε²)）。
+    真实尾概率用二项分布精确计算，作为「界离真值多远」的参照。
+    """
+    n = 100
+    eps = np.linspace(0.04, 0.50, 260)
+    cheb = np.minimum(10.0, 1.0 / (4 * n * eps ** 2))
+    hoef = np.minimum(10.0, 2 * np.exp(-2 * n * eps ** 2))
+
+    pmf = np.array([math.comb(n, k) / 2 ** n for k in range(n + 1)])
+    ks = np.arange(n + 1) / n
+    exact = np.array([pmf[np.abs(ks - 0.5) >= e].sum() for e in eps])
+
+    fig, ax = plt.subplots(figsize=(7.2, 4.0))
+    ax.axhspan(1.0, 10.0, color=GRID, alpha=0.55, lw=0)
+    ax.axhline(1.0, color="#9a9285", lw=1.0, ls=(0, (4, 3)))
+    ax.text(0.285, 1.30, t("y > 1：界比 1 还大，等于什么都没说", "bound above 1: vacuous"),
+            fontsize=9, color="#6f675c")
+
+    ax.plot(eps, cheb, color=BLUE, lw=2.0,
+            label=t(r"Chebyshev  $1/(4n\epsilon^2)$", r"Chebyshev  $1/(4n\epsilon^2)$"))
+    ax.plot(eps, hoef, color=VERM, lw=2.0,
+            label=t(r"Hoeffding  $2e^{-2n\epsilon^2}$", r"Hoeffding  $2e^{-2n\epsilon^2}$"))
+    ax.plot(eps, exact, color=GREEN, lw=1.6, ls=(0, (4, 3)),
+            label=t("真实尾概率（二项分布）", "exact tail (binomial)"))
+
+    ax.set_yscale("log")
+    ax.set_ylim(1e-10, 10)
+    ax.set_xlim(0.04, 0.50)
+    ax.set_xlabel(t(r"偏差 $\epsilon$", r"deviation $\epsilon$"))
+    ax.set_ylabel(t("概率上界（对数轴）", "bound (log scale)"))
+    ax.set_title(t(r"同一个 $\epsilon$：Chebyshev 是 $\epsilon^{-2}$，Hoeffding 是 $e^{-n\epsilon^2}$（$n=100$）",
+                   r"Chebyshev $\epsilon^{-2}$ vs Hoeffding $e^{-n\epsilon^2}$ ($n=100$)"))
+
+    i30 = int(np.argmin(np.abs(eps - 0.31)))
+    ax.annotate(t("\u03b5 在指数上：每加 0.05，Hoeffding 掉几个数量级",
+                  "exponential in \u03b5"),
+                xy=(eps[i30], hoef[i30]), xytext=(0.325, 8e-6),
+                fontsize=9, color=VERM, ha="left",
+                arrowprops=dict(arrowstyle="->", color=VERM, lw=1.0,
+                                connectionstyle="arc3,rad=0.18"))
+    ax.legend(loc="lower left", fontsize=9)
+    save(fig, out_dir, "tail-bounds.png")
+
+
 # slug -> (函数, 说明)
 FIGURES = {
     "arms": (fig_arms, "臂的奖励分布与次优间隙"),
@@ -636,6 +687,7 @@ FIGURES = {
     "policy-loss": (fig_policy_loss, "策略损失曲线：可容许与被支配"),
     "posterior-shrink": (fig_posterior_shrink, "后验随采样次数收缩"),
     "regret-over-logn": (fig_regret_over_logn, "R_n/ln n 的收敛速度"),
+    "tail-bounds": (fig_tail_bounds, "Chebyshev / Hoeffding / 真实尾概率的对数对比"),
 }
 
 
