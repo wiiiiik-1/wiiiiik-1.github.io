@@ -197,6 +197,7 @@
 4. 改完 build 一次，跑一遍「锚点全量校验」（读 `dist` 里的 html，逐个 `href` 查 `id="…"` 是否存在）。
 5. **节点的「归属篇目」由 `href` 决定**：`postSlugOf()` 从 `href` 里取 `/posts/<slug>/`，`subgraphFor()` 再把该篇节点与 1–2 级前置一起取出。所以把某个节点的 `href` 从一个章节挪到另一个章节，会同时改变它出现在哪一篇的子图里（`bigo`、`tail`、`kl` 就是这样从导论/第 4 篇挪到数学工具箱的）。
 6. **每篇正文的子图是自动的**：`PostLayout` 末尾渲染 `<KnowledgeMap post={post.id} compact />`，先取 2 级前置，节点超过 18 个就退回 1 级。朱砂色填充的是「本篇直接讲」的节点。**新增一篇带节点的文章不需要改 PostLayout**，往 `NODES` 加节点即可。
+7. **导论是例外**：它在 `PostLayout` 里被写死成 `post.id === "bandits-series-intro"` 时渲染 `<ReadingRoute />`（`src/components/ReadingRoute.astro`）——一张「八篇怎么走」的路线图：上面是前置线（数学/概率/统计），下面是主线（第 1–4 篇），中间一根回车线把「统计读完」接到「第 1 篇」。坐标按 `CHAPTERS` 的 slice 手算在 `1080×380` 的 viewBox 里，**增删篇目要重算 x 与 viewBox 宽度**。
 
 **改公式/文字**
 - 只动 `.md`，push 即可；CI 会自动重建。

@@ -3,6 +3,7 @@ import { render } from "astro:content";
 import BaseLayout from "./BaseLayout.astro";
 import Toc from "../components/Toc.astro";
 import KnowledgeMap from "../components/KnowledgeMap.astro";
+import ReadingRoute from "../components/ReadingRoute.astro";
 import type { Post } from "../utils";
 import { formatDate, readingTime } from "../utils";
 
@@ -66,13 +67,19 @@ const minutes = readingTime(post.body ?? "");
         <Content />
       </article>
 
-      <section class="post-map" aria-labelledby="post-map-title">
-        <div class="post-map-head">
-          <h2 id="post-map-title">本篇在拓扑中的位置</h2>
-          <p>朱砂色是这一篇直接讲的节点，其余是它的前置；点方块可跳到对应小节。</p>
-        </div>
-        <KnowledgeMap post={post.id} compact />
-      </section>
+      {post.id === "bandits-series-intro" ? (
+        <section class="post-map">
+          <ReadingRoute current={post.id} />
+        </section>
+      ) : (
+        <section class="post-map" aria-labelledby="post-map-title">
+          <div class="post-map-head">
+            <h2 id="post-map-title">本篇在拓扑中的位置</h2>
+            <p>朱砂色是这一篇直接讲的节点，其余是它的前置；点方块可跳到对应小节。</p>
+          </div>
+          <KnowledgeMap post={post.id} compact />
+        </section>
+      )}
 
       {post.data.pdf && (
         <p class="post-pdf">

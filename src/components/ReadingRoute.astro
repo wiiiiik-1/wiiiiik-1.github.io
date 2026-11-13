@@ -1,0 +1,241 @@
+---
+import { CHAPTERS } from "../data/knowledge-graph";
+
+interface Props {
+  current?: string;
+}
+
+const { current = "" } = Astro.props;
+
+/* 三条带：入口（本页）在上，前置线在中，主线在下。
+   坐标全部在 viewBox 1060×430 里手算，改动条目数需要重算 x。 */
+const W = 1080;
+const H = 380;
+
+const NODE_W = 252;
+const NODE_H = 84;
+const PRE_Y = 58;
+const MAIN_Y = 268;
+
+const pre = CHAPTERS.slice(0, 3).map((chapter, index) => ({
+  ...chapter,
+  x: 60 + index * 300,
+  y: PRE_Y,
+  w: NODE_W,
+  short: ["求和·不等式·KL", "公理→分布→极限", "估计·区间·检验"][index],
+}));
+
+const main = CHAPTERS.slice(3).map((chapter, index) => ({
+  ...chapter,
+  x: 60 + index * 258,
+  y: MAIN_Y,
+  w: 228,
+  short: [
+    "四格表·MLE·CI",
+    "regret 与 ETC",
+    "16log n/Δ² 与 UCB",
+    "后验抽样与 2log n/Δ",
+  ][index],
+}));
+
+const preArrows = [0, 1].map((i) => {
+  const from = pre[i].x + NODE_W;
+  const to = pre[i + 1].x;
+  const y = PRE_Y + NODE_H / 2;
+  return { d: `M${from + 6},${y} H${to - 10}`, ax: to - 10, ay: y };
+});
+
+const mainArrows = [0, 1, 2].map((i) => {
+  const from = main[i].x + main[i].w;
+  const to = main[i + 1].x;
+  const y = MAIN_Y + NODE_H / 2;
+  return { d: `M${from + 6},${y} H${to - 10}`, ax: to - 10, ay: y };
+});
+
+/* 前置线末端 → 主线起点：一条回车线 */
+const mainCenter = main[0].x + main[0].w / 2;
+const returnPath = `M${pre[2].x + NODE_W / 2},${PRE_Y + NODE_H}
+  V${PRE_Y + NODE_H + 34}
+  H${mainCenter}
+  V${MAIN_Y - 8}`;
+---
+
+<div class="route" data-route>
+  <div class="route-head">
+    <h3>八篇怎么走</h3>
+    <p>上面是前置线，下面是主线。前置线只在需要时补，主线按顺序读；回车那根线表示「统计读完，从这里进入 bandits」。</p>
+  </div>
+
+  <div class="route-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label="八篇笔记的阅读路线图">
+      <defs>
+        <marker id="rr-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" class="rr-head" />
+        </marker>
+      </defs>
+
+      <text x="60" y={`${PRE_Y - 20}`} class="rr-lane">前置线 · 只补够用的部分</text>
+      <path class="rr-line" d={`M60,${PRE_Y + NODE_H + 2} H${pre[2].x + NODE_W}`} />
+
+      <text x="60" y={`${MAIN_Y - 20}`} class="rr-lane">主线 · 四篇其实是一个问题</text>
+      <path class="rr-line" d={`M60,${MAIN_Y + NODE_H + 2} H${main[3].x + main[3].w}`} />
+
+      {pre.map((node) => (
+        <a href={`/posts/${node.slug}/`} class="rr-node">
+          <g transform={`translate(${node.x}, ${node.y})`}>
+            <rect width={NODE_W} height={NODE_H} rx="9" class={`rr-card rr-card--${node.tone}`} />
+            <text x="16" y="26" class="rr-eyebrow">{node.eyebrow}</text>
+            <text x="16" y="50" class="rr-title">{node.label}</text>
+            <text x="16" y="70" class="rr-short">{node.short}</text>
+          </g>
+        </a>
+      ))}
+
+      {main.map((node) => (
+        <a href={`/posts/${node.slug}/`} class="rr-node">
+          <g transform={`translate(${node.x}, ${node.y})`}>
+            <rect width={node.w} height={NODE_H} rx="9" class={`rr-card rr-card--${node.tone}`} />
+            <text x="16" y="26" class="rr-eyebrow">{node.eyebrow}</text>
+            <text x="16" y="50" class="rr-title">{node.label}</text>
+            <text x="16" y="70" class="rr-short">{node.short}</text>
+          </g>
+        </a>
+      ))}
+
+      {preArrows.map((arrow) => (
+        <path class="rr-link" d={arrow.d} marker-end="url(#rr-arrow)" />
+      ))}
+      {mainArrows.map((arrow) => (
+        <path class="rr-link" d={arrow.d} marker-end="url(#rr-arrow)" />
+      ))}
+
+      <path class="rr-return" d={returnPath} marker-end="url(#rr-arrow)" />
+      <text
+        x={mainCenter + 14}
+        y={PRE_Y + NODE_H + 52}
+        class="rr-return-label"
+      >接上：这里开始 bandits</text>
+    </svg>
+  </div>
+
+  <p class="route-foot">
+    时间紧：<a href="/posts/multi-armed-bandits-intro/">第 2 篇</a> 可以直接读，第 1 篇留到需要时补；
+    想知道每个概念依赖谁，看 <a href="/map/">知识拓扑</a>。
+  </p>
+</div>
+
+<style>
+  .route {
+    margin: 1.2rem 0 1.6rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--paper-lift);
+  }
+
+  .route-head {
+    padding: 0.9rem 1rem 0.7rem;
+    border-bottom: 1px dashed var(--line);
+  }
+
+  .route-head h3 {
+    margin: 0 0 0.25rem;
+    font-size: 0.98rem;
+  }
+
+  .route-head p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  .route-scroll {
+    overflow-x: auto;
+    padding: 0.6rem 0 0.2rem;
+  }
+
+  .route-scroll svg {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+    height: auto;
+  }
+
+  .rr-lane {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    fill: var(--faint);
+  }
+
+  .rr-line {
+    fill: none;
+    stroke: var(--line);
+    stroke-width: 6;
+    stroke-linecap: round;
+    opacity: 0.55;
+  }
+
+  .rr-card {
+    fill: var(--paper);
+    stroke: var(--line-strong);
+    stroke-width: 1;
+    transition: fill 0.15s ease;
+  }
+
+  .rr-card--math { stroke: #a67c48; }
+  .rr-card--prob { stroke: var(--blue); }
+  .rr-card--stat { stroke: #3f6b52; }
+  .rr-card--bandit { stroke: var(--accent); }
+
+  .rr-node { cursor: pointer; }
+  .rr-node:hover .rr-card { fill: var(--paper-deep); }
+
+  .rr-eyebrow {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.06em;
+    fill: var(--faint);
+  }
+
+  .rr-title {
+    font-size: 14px;
+    font-weight: 600;
+    fill: var(--ink);
+  }
+
+  .rr-short {
+    font-size: 10.5px;
+    fill: var(--muted);
+  }
+
+  .rr-link {
+    fill: none;
+    stroke: var(--line-strong);
+    stroke-width: 1.6;
+  }
+
+  .rr-head { fill: var(--line-strong); }
+
+  .rr-return {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 1.6;
+    stroke-dasharray: none;
+  }
+
+  .rr-return-label {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    fill: var(--accent);
+  }
+
+  .route-foot {
+    margin: 0;
+    padding: 0.55rem 1rem 0.7rem;
+    border-top: 1px dashed var(--line);
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+
+  .route-foot a { color: var(--accent); }
+</style>
