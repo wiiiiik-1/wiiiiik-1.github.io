@@ -1,7 +1,7 @@
 # 博客内容地图（给后续会话）
 
 > **用途**：让新的会话不必先读完 5 篇、约 10 万字符，就能知道这里**有什么、怎么写的、还能补什么**。
-> **最后更新**：2026-11-13（新增前置三章 + 知识拓扑页 `/map/`，篇目从 5 篇增至 8 篇）
+> **最后更新**：2026-11-13（前置三章 + 知识拓扑页 `/map/` + 每篇正文的局部子图；CI 改用 `npm ci`）
 > **状态**：本地 = 远端 = 已部署，CI 全绿。
 
 ---
@@ -18,7 +18,7 @@
 |---|---|
 | 线上地址 | <https://wiiiiik-1.github.io/> |
 | 仓库 | `wiiiiik-1/wiiiiik-1.github.io`，分支 `main` |
-| 技术栈 | Astro 5.18.2 + Markdown + `remark-math` / `rehype-katex`（构建时渲染公式） |
+| 技术栈 | Astro 5.18.2 + Markdown + `remark-math` / `rehype-katex`（构建时渲染公式）；依赖用 lockfile 锁定，CI 跑 `npm ci` |
 | 部署 | push 到 `main` → `.github/workflows/deploy.yml` → GitHub Pages，约 2 分钟 |
 | 本地命令 | `npm install` / `npm run dev` / `npm run build` / `npm run new -- "标题" slug "标签"` |
 | 页面 | `/` 首页、`/posts/`、`/posts/<slug>/`、`/map/`（知识拓扑）、`/tags/`、`/archive/`、`/about/`、`/rss.xml` |
@@ -195,6 +195,8 @@
 2. **边的两端 stage 必须左小右大**，否则线会往回画；
 3. `href` 指向某一节的锚点，锚点由标题自动生成，**标题里有公式时别手写锚点**：KaTeX 会改写标题文本，实际 id 往往变成 `73-o-与渐近记号`、`43-定量tiδi216logn` 这种。正确做法是先 build，再在 `dist/posts/<slug>/index.html` 里搜 `<h2 id=`，抄真实 id；
 4. 改完 build 一次，跑一遍「锚点全量校验」（读 `dist` 里的 html，逐个 `href` 查 `id="…"` 是否存在）。
+5. **节点的「归属篇目」由 `href` 决定**：`postSlugOf()` 从 `href` 里取 `/posts/<slug>/`，`subgraphFor()` 再把该篇节点与 1–2 级前置一起取出。所以把某个节点的 `href` 从一个章节挪到另一个章节，会同时改变它出现在哪一篇的子图里（`bigo`、`tail`、`kl` 就是这样从导论/第 4 篇挪到数学工具箱的）。
+6. **每篇正文的子图是自动的**：`PostLayout` 末尾渲染 `<KnowledgeMap post={post.id} compact />`，先取 2 级前置，节点超过 18 个就退回 1 级。朱砂色填充的是「本篇直接讲」的节点。**新增一篇带节点的文章不需要改 PostLayout**，往 `NODES` 加节点即可。
 
 **改公式/文字**
 - 只动 `.md`，push 即可；CI 会自动重建。
