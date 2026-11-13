@@ -11,7 +11,7 @@ lang: "zh-CN"
 > **这份笔记做什么**：把讲义里散在 10 页上的定义、公式和例子串成一条推理链，并补上中英术语对照。
 > **读法**：先看第 0 节的路线图；只想抓公式就看第 6 节速查；想搞清 regret 为什么能分解，读第 4 节。
 >
-> **系列位置**：这是三篇系列的第 2 篇。为什么会有 bandit 这个问题、它和假设检验是什么关系，见 [系列导论：从一道暴雨预警，到假设检验与多臂老虎机](/posts/bandits-series-intro/)；本篇留下的两个悬念（ETC 的 regret 界、怎么不靠猜设定探索预算）由下一篇 [从 ETC 到 UCB](/posts/from-etc-to-ucb/) 收尾。
+> **系列位置**：这是四篇系列的第 2 篇。为什么会有 bandit 这个问题、它和假设检验是什么关系，见 [系列导论：从一道暴雨预警，到假设检验与多臂老虎机](/posts/bandits-series-intro/)；本篇留下的两个悬念（ETC 的 regret 界、怎么不靠猜设定探索预算）由下一篇 [从 ETC 到 UCB](/posts/from-etc-to-ucb/) 收尾，再由第 4 篇 [Thompson Sampling](/posts/thompson-sampling/) 给出另一条路：不估上界，改成从后验里抽样。
 
 ---
 

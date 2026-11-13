@@ -11,7 +11,7 @@ lang: "zh-CN"
 > **和上一篇的关系**：Lecture 3b 只把 ETC「写出来」，这一讲做三件更硬的事——**给 ETC 算出 regret 界**、**找出它为什么不够好**、**用 UCB 修掉它**。
 > **符号沿用手稿**：$\Delta_i=\mu^*-\mu_i$ 是臂 $i$ 的次优间隙，$n$ 是总轮数，$k$ 是臂数，$m$ 是每个臂的探索次数。
 >
-> **系列位置**：第 3 篇。问题从哪来见 [系列导论](/posts/bandits-series-intro/)；本篇反复用到的 regret 分解公式、次优间隙、$O(\log n)$ 的含义，前置推导都在 [多臂老虎机入门](/posts/multi-armed-bandits-intro/)。
+> **系列位置**：第 3 篇。问题从哪来见 [系列导论](/posts/bandits-series-intro/)；本篇反复用到的 regret 分解公式、次优间隙、$O(\log n)$ 的含义，前置推导都在 [多臂老虎机入门](/posts/multi-armed-bandits-intro/)。**下一篇** [从 UCB 到 Thompson Sampling](/posts/thompson-sampling/) 先给本篇收尾——常数 16 的来源、UCB 与 ETC 到底谁赢——再换一套世界观：不再「乐观地估上界」，而是「相信一个分布，然后抽样」。
 
 ---
 

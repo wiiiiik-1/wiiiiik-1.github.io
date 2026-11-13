@@ -132,12 +132,12 @@ npm run dev
 
 ```bash
 python -m pip install -r scripts/figures/requirements.txt
-python scripts/figures/make-figures.py     # 重新生成 public/images/bandit-figures/ 下的六张图
+python scripts/figures/make-figures.py     # 重新生成 public/images/bandit-figures/ 下的十二张图
 ```
 
 | 路径 | 作用 |
 |---|---|
-| `scripts/figures/make-figures.py` | 六张图；固定随机种子，`--only` 单画一张、`--out` 换输出目录、`--lang en` 强制英文标注 |
+| `scripts/figures/make-figures.py` | 十二张图；固定随机种子，`--only` 单画一张、`--out` 换输出目录、`--lang en` 强制英文标注 |
 | `scripts/figures/README.md` | 每张图用在哪一节、想说明什么；为什么 regret 曲线要跑 2000 次 |
 | `scripts/sim/etc-worked-example.py` | 导论里「押错 12.8%、平均 regret 4.05」那个例子的 20 万次模拟 |
 | `scripts/sim/bandit-sim.py` | 贪心 / ETC / UCB1 在三个场景下的 regret 对比 |

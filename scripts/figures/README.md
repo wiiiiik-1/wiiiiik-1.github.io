@@ -30,7 +30,7 @@ python scripts/figures/make-figures.py --trials 5000     # 曲线更平滑（也
 
 中文标注需要系统里有中文字体：Windows 用微软雅黑或黑体，macOS 用苹方，Linux 装 Noto CJK。一个都没有时脚本自动退回英文标注（图照样能出，只是标签变英文），不会画成方框。
 
-## 六张图分别在哪、想说明什么
+## 十二张图分别在哪、想说明什么
 
 | slug | 文件 | 用在 | 想说明的一件事 |
 |---|---|---|---|
@@ -40,8 +40,14 @@ python scripts/figures/make-figures.py --trials 5000     # 曲线更平滑（也
 | `etc-vs-m` | `etc-regret-vs-m.png` | 4b §2.5 | 界对 $m$ 是 U 形；数值最小点与闭式解 $4\ln n/\Delta^2$ 不重合 |
 | `ucb-intervals` | `ucb-intervals.png` | 4b §4.1 | 经验均值、置信区间、index、真值四层关系；样本少的臂 index 被抬高 |
 | `regret-curves` | `regret-curves.png` | 4b §6 | 贪心/ETC 近似直线，UCB 弯下去（前 1000 轮 UCB 并不占优） |
+| `etc-vs-gap` | `etc-ucb-vs-gap.png` | 5 §1.5 | 固定 $m$ 的 ETC 只在某段 $\Delta$ 上好；把 UCB 的常数从 4 换成 2，曲线整体掉下来 |
+| `policy-loss` | `policy-loss.png` | 5 §2.1 | 「被支配」= 处处更高；可容许 = 各有一段最好 |
+| `bayes-bag` | `bayes-bag.png` | 5 §3.1 | 黑球一步排除、白球只把 1/2 推到 2/3 |
+| `ts-sampling` | `ts-sampling.png` | 5 §4.2 | 后验均值低的臂也能赢下一次抽样——探索来自随机化 |
+| `posterior-shrink` | `posterior-shrink.png` | 5 §4.4 | 后验方差 $\propto1/T$，越采越窄 |
+| `ts-vs-ucb` | `ts-vs-ucb.png` | 5 §5.3 | TS 全程低于 UCB1，但 10–90 分位很宽（方差大） |
 
-（3b = `multi-armed-bandits-intro`，4b = `from-etc-to-ucb`。）
+（3b = `multi-armed-bandits-intro`，4b = `from-etc-to-ucb`，5 = `thompson-sampling`。）
 
 ## 关于「可复现」
 

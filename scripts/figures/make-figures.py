@@ -346,6 +346,233 @@ def fig_one_over_t(out_dir: Path) -> None:
     save(fig, out_dir, "one-over-t.png")
 
 
+# ---------------------------------------------------------------- 图 7–10：Lecture 5（贝叶斯 / Thompson Sampling）
+def _run_bandit(mu, n, trials, policy, rng, etc_m=0, gaussian=True, ucb_c=4.0):
+    r"""并排跑 trials 条轨迹，返回每条轨迹的累积 regret 矩阵 (trials, n)。
+
+    policy: "ucb" | "etc" | "ts"。奖励默认 N(mu, 1)；gaussian=False 时用伯努利。
+    ucb_c 是 bonus 里 log 的系数：sqrt(c*log t/T)，c=4 是讲义里 δ=1/n² 的版本。
+    """
+    mu = np.asarray(mu, dtype=float)
+    k, best = len(mu), float(mu.max())
+    rows = np.arange(trials)
+    counts = np.zeros((trials, k), dtype=np.int64)
+    sums = np.zeros((trials, k))
+    acc = np.zeros(trials)
+    cum = np.empty((trials, n))
+    committed = np.full(trials, -1)
+
+    for t in range(1, n + 1):
+        mean_hat = sums / np.maximum(counts, 1)
+        if policy == "ucb":
+            bonus = np.sqrt(ucb_c * np.log(max(t, 2)) / np.maximum(counts, 1))
+            idx = np.argmax(mean_hat + bonus, axis=1)
+            a = np.where(t <= k, t - 1, idx)
+        elif policy == "etc":
+            if t <= etc_m * k:
+                a = np.full(trials, (t - 1) % k)
+            else:
+                todo = committed < 0
+                if todo.any():
+                    committed[todo] = np.argmax(mean_hat[todo], axis=1)
+                a = committed
+        else:  # ts：从后验 N(mean_hat, 1/T) 里抽一个 theta
+            sd = 1.0 / np.sqrt(np.maximum(counts, 1))
+            theta = rng.normal(loc=mean_hat, scale=sd, size=(trials, k))
+            a = np.where(t <= k, t - 1, np.argmax(theta, axis=1))
+
+        if gaussian:
+            reward = mu[a] + rng.normal(size=trials)
+        else:
+            reward = (rng.random(trials) < mu[a]).astype(float)
+        counts[rows, a] += 1
+        sums[rows, a] += reward
+        acc += best - mu[a]
+        cum[:, t - 1] = acc
+    return cum
+
+
+def fig_etc_ucb_vs_gap(out_dir: Path, trials: int = 250, seed: int = 5) -> None:
+    """k=2、间隙 Δ 变化时，ETC（几个固定 m + 每个 Δ 最好 m）与 UCB 的期望 regret。
+
+    对应讲义第 3 页：固定 m 的 ETC 只在自己那段 Δ 上接近最优，而 UCB 整段都不差；
+    「每个 Δ 都取最好的 m」是上帝视角，真实算法拿不到——因为它需要知道 Δ。
+    """
+    n = 1000
+    deltas = np.linspace(0.05, 0.95, 19)
+    m_grid = [10, 25, 40, 50, 75, 100, 150, 200, 320, 500]
+    show = [25, 50, 75, 100]
+    ucb_v, ucb2_v, oracle_v = [], [], []
+    grid_v = {m: [] for m in m_grid}
+
+    for d in deltas:
+        mu = [0.5 + d / 2, 0.5 - d / 2]  # 两臂关于 0.5 对称，间隙恰为 d
+        ucb_v.append(_run_bandit(mu, n, trials, "ucb", np.random.default_rng(seed), gaussian=False).mean(0)[-1])
+        ucb2_v.append(_run_bandit(mu, n, trials, "ucb", np.random.default_rng(seed),
+                                  gaussian=False, ucb_c=2.0).mean(0)[-1])
+        for m in m_grid:
+            grid_v[m].append(_run_bandit(mu, n, trials, "etc", np.random.default_rng(seed),
+                                         etc_m=m, gaussian=False).mean(0)[-1])
+        oracle_v.append(min(grid_v[m][-1] for m in m_grid))
+
+    fig, ax = plt.subplots(figsize=(7.2, 4.0))
+    shades = ["#b9cfe1", "#93b2cc", "#6c93b4", "#43749a"]
+    for m, c in zip(show, shades):
+        ax.plot(deltas, grid_v[m], color=c, lw=1.4, label=f"ETC ($m$={m})")
+    ax.plot(deltas, oracle_v, color=GOLD, lw=2.2, label=t("ETC（每个 Δ 取最好的 m）", "ETC (best m per gap)"))
+    ax.plot(deltas, ucb_v, color=INK, lw=2.2, label=t(r"UCB1：$\sqrt{4\log t/T_i}$", r"UCB1: $\sqrt{4\log t/T_i}$"))
+    ax.plot(deltas, ucb2_v, color=INK, lw=1.6, ls=(0, (4, 2)),
+            label=t(r"UCB1：$\sqrt{2\log t/T_i}$", r"UCB1: $\sqrt{2\log t/T_i}$"))
+    ax.set_xlabel(t(r"间隙 $\Delta$", r"gap $\Delta$"))
+    ax.set_ylabel(t("期望 regret", "expected regret"))
+    ax.set_title(t(r"$k=2$：期望 regret 随间隙的变化（$n=1000$）",
+                   r"Expected regret vs gap ($k=2$, $n=1000$)"))
+    ax.legend(loc="upper right", fontsize=8.5)
+    ax.set_ylim(0, 60)
+    save(fig, out_dir, "etc-ucb-vs-gap.png")
+
+
+def fig_bayes_bag(out_dir: Path) -> None:
+    """两球袋子的先验与两个后验：黑球一步排除，白球只把信念推到 2/3。"""
+    panels = [
+        (t("先验", "prior"), ["1/2", "1/2"], [0.5, 0.5], "#9a9285"),
+        (t("观测：白球", "observe: white"), ["2/3", "1/3"], [2 / 3, 1 / 3], BLUE),
+        (t("观测：黑球", "observe: black"), ["0", "1"], [0.0, 1.0], VERM),
+    ]
+    fig, axes = plt.subplots(1, 3, figsize=(7.2, 3.0), sharey=True)
+    labels = ["$P(\\mathrm{WW})$", "$P(\\mathrm{WB})$"]
+    for ax, (title, texts, vals, color) in zip(axes, panels):
+        bars = ax.bar(labels, vals, color=[color, color], alpha=0.75, width=0.55)
+        for bar, v, s in zip(bars, vals, texts):
+            ax.text(bar.get_x() + bar.get_width() / 2, v + 0.03, s,
+                    ha="center", fontsize=11, color=INK)
+        ax.set_title(title, fontsize=11)
+        ax.set_ylim(0, 1.15)
+        ax.grid(axis="x", visible=False)
+    axes[0].set_ylabel(t("概率", "probability"))
+    fig.suptitle(t("一个装了「两白」或「一白一黑」的袋子：先验 → 后验",
+                   "A bag with WW or WB: prior -> posterior"), fontsize=11.5, y=1.02)
+    save(fig, out_dir, "bayes-bag.png")
+
+
+def fig_ts_sampling(out_dir: Path) -> None:
+    """TS 的一次抽样：后验均值高的臂也可能输掉，这就是随机化带来的探索。"""
+    xs = np.linspace(0.15, 1.05, 600)
+    specs = [
+        ("arm 1", 0.62, 0.10, BLUE, 0.55),
+        ("arm 2", 0.55, 0.18, VERM, 0.70),
+    ]
+    fig, ax = plt.subplots(figsize=(7.2, 3.9))
+    for name, mu, sd, color, draw in specs:
+        y = np.exp(-0.5 * ((xs - mu) / sd) ** 2) / (sd * math.sqrt(2 * math.pi))
+        ax.plot(xs, y, color=color, lw=2.0, label=f"{name}: $\\mathcal{{N}}$({mu}, {sd}$^2$)")
+        ax.fill_between(xs, y, color=color, alpha=0.10)
+        peak = np.exp(-0.5 * ((draw - mu) / sd) ** 2) / (sd * math.sqrt(2 * math.pi))
+        ax.plot([draw, draw], [0, peak], color=color, ls=(0, (2, 2)), lw=1.2)
+        ax.scatter([draw], [0], marker="^", s=60, color=color, zorder=5)
+        ax.text(draw, 0.16, rf"$\theta$={draw}", ha="center", fontsize=9.5, color=color,
+                bbox=dict(boxstyle="round,pad=0.15", fc=PAPER, ec="none", alpha=0.9))
+    ax.annotate(t(r"抽到 $\theta_2>\theta_1$，于是选 arm 2" + "\n"
+                  + r"尽管它的后验均值更低 —— 这就是探索",
+                  "theta_2 > theta_1: pick arm 2"),
+                xy=(0.70, 1.30), xytext=(0.80, 3.35), fontsize=9.5, color=VERM, ha="center",
+                arrowprops=dict(arrowstyle="->", color=VERM, lw=1.1))
+    ax.set_ylim(-0.05, 4.55)
+    ax.set_xlabel(t("奖励均值 $\\mu$", "mean reward $\\mu$"))
+    ax.set_ylabel(t("后验密度", "posterior density"))
+    ax.set_title(t("Thompson Sampling 决策前的一次抽样（示意）",
+                   "One draw per arm before the decision"))
+    ax.legend(loc="upper left", fontsize=9)
+    save(fig, out_dir, "ts-sampling.png")
+
+
+def fig_ts_vs_ucb(out_dir: Path, trials: int = 300, seed: int = 7) -> None:
+    """Gaussian bandits 上 TS 与 UCB1 的累积 regret。
+
+    讲义第 14 页的定理是 Gaussian 版：R_n ≤ Σ 2log n/Δ_i。
+    注意这里的曲线**不画** 2log n/Δ 那条渐近线：它的常数项是 O(1)，
+    在 n=1e4 时还在曲线上面，硬画出来会像是 TS 违反了下界。
+    """
+    mu = [0.60, 0.50, 0.40]
+    n = 10000
+    ts = _run_bandit(mu, n, trials, "ts", np.random.default_rng(seed))
+    ucb = _run_bandit(mu, n, trials, "ucb", np.random.default_rng(seed + 1), gaussian=True)
+
+    ts_mean, ucb_mean = ts.mean(0), ucb.mean(0)
+    lo, hi = np.percentile(ts, 10, axis=0), np.percentile(ts, 90, axis=0)
+    slope = sum(2.0 / (max(mu) - m) for m in mu if m < max(mu))  # Σ 2/Δ_i
+
+    fig, ax = plt.subplots(figsize=(7.2, 3.9))
+    xs = np.arange(1, n + 1)
+    ax.fill_between(xs, lo, hi, color=VERM, alpha=0.14, lw=0, label=t("TS 的 10–90 分位", "TS 10-90%"))
+    ax.plot(xs, ts_mean, color=VERM, lw=2.2, label="Thompson Sampling")
+    ax.plot(xs, ucb_mean, color=BLUE, lw=2.0, label="UCB1")
+    ax.text(0.40, 0.80,
+            t(f"渐近极限：$R_n/\\ln n\\to\\sum 2/\\Delta_i={slope:.0f}$\n"
+              "常数项是 $O(1)$，$n=10^4$ 还没逼近，所以不画成曲线",
+              f"asymptote: $R_n/\\ln n\\to{slope:.0f}$"),
+            transform=ax.transAxes, fontsize=9, color="#5a544a")
+    ax.set_xlabel(t("轮数 t", "round t"))
+    ax.set_ylabel(t("累积 regret $R_t$", "cumulative regret $R_t$"))
+    ax.set_title(t(r"Gaussian bandits 上 TS 与 UCB1（$\mu=(0.6,0.5,0.4)$, 300 次平均）",
+                   "TS vs UCB1 on Gaussian bandits (300 runs)"))
+    ax.legend(loc="upper left", fontsize=9.5)
+    save(fig, out_dir, "ts-vs-ucb.png")
+
+
+def fig_policy_loss(out_dir: Path) -> None:
+    """四条策略在各环境下的损失：2 被 3 处处支配，1/3/4 各有一段最佳区间。"""
+    x = np.linspace(0, 1, 400)
+    curves = [
+        ("policy 1", 0.05 + 0.85 * x, GREEN),
+        ("policy 2", 0.75 - 0.18 * x + 0.015 * np.sin(3 * x), "#c2185b"),
+        ("policy 3", 0.62 - 0.16 * x, BLUE),
+        ("policy 4", 0.15 + 0.55 * np.exp(-((x - 0.5) / 0.07) ** 2), VERM),
+    ]
+    fig, ax = plt.subplots(figsize=(7.2, 3.8))
+    for name, y, c in curves:
+        ax.plot(x, y, color=c, lw=2.0, label=name)
+    p2 = 0.75 - 0.18 * x + 0.015 * np.sin(3 * x)
+    p3 = 0.62 - 0.16 * x
+    ax.fill_between(x, p3, p2, color="#c2185b", alpha=0.10, lw=0)
+    ax.text(0.06, 0.93, t("阴影：policy 2 处处高于 policy 3\n→ 被支配，可以删掉",
+                          "shaded: policy 2 above policy 3 -> dominated"),
+            fontsize=9, color="#c2185b", va="top")
+    for xx, txt, c in ((0.02, t("1 最佳", "1 best"), GREEN), (0.50, t("4 最佳", "4 best"), VERM),
+                       (0.98, t("4 最佳", "4 best"), VERM)):
+        ax.text(xx, 0.02, txt, fontsize=8.5, color=c, ha="left" if xx < 0.5 else "right")
+    ax.set_xlabel(t("环境 υ", r"environment $\upsilon$"))
+    ax.set_ylabel(t("损失（越小越好）", "loss (lower is better)"))
+    ax.set_title(t("策略在各环境下的损失：可容许 vs 被支配",
+                   "Loss of four policies: admissible vs dominated"))
+    ax.set_ylim(0, 1.12)
+    ax.legend(loc="upper left", bbox_to_anchor=(0.0, 1.0), fontsize=9, ncol=2)
+    save(fig, out_dir, "policy-loss.png")
+
+
+def fig_posterior_shrink(out_dir: Path) -> None:
+    """同一条臂，样本越多后验越窄；窄到一定程度就不会再被抽中。"""
+    xs = np.linspace(-0.4, 1.6, 700)
+    fig, ax = plt.subplots(figsize=(7.2, 3.6))
+    for T, alpha, color in ((4, 0.16, "#9a9285"), (16, 0.22, BLUE), (64, 0.30, VERM)):
+        sd = 1.0 / math.sqrt(T)
+        y = np.exp(-0.5 * ((xs - 0.6) / sd) ** 2) / (sd * math.sqrt(2 * math.pi))
+        ax.plot(xs, y, color=color, lw=2.0, label=t(rf"$T_i$={T}，$\sigma$={sd:.2f}", rf"$T_i$={T}"))
+        ax.fill_between(xs, y, color=color, alpha=alpha)
+    ax.axvline(0.6, color=INK, ls=(0, (3, 3)), lw=1.0)
+    ax.annotate(t("样本越多，后验越窄\n→ 抽到偏高值的概率越小",
+                  "more samples -> narrower posterior"),
+                xy=(0.80, 0.62), xytext=(1.00, 1.45), fontsize=9.5, color=VERM,
+                arrowprops=dict(arrowstyle="->", color=VERM, lw=1.1))
+    ax.set_xlabel(t(r"$\mu_i$", r"$\mu_i$"))
+    ax.set_ylabel(t("后验密度", "posterior density"))
+    ax.set_title(t(r"后验随采样次数收缩：$\mathcal{N}(\hat\mu_i,\ 1/T_i)$",
+                   r"Posterior shrinks: $\mathcal{N}(\hat\mu_i, 1/T_i)$"))
+    ax.set_ylim(0, 3.45)
+    ax.legend(loc="upper left", fontsize=8.5)
+    save(fig, out_dir, "posterior-shrink.png")
+
+
 # slug -> (函数, 说明)
 FIGURES = {
     "arms": (fig_arms, "臂的奖励分布与次优间隙"),
@@ -354,6 +581,12 @@ FIGURES = {
     "etc-vs-m": (fig_etc_vs_m, "ETC 的界随 m 的 U 形变化"),
     "ucb-intervals": (fig_ucb_intervals, "UCB 的一轮快照"),
     "one-over-t": (fig_one_over_t, "1/t 错误率与对数 regret"),
+    "etc-vs-gap": (fig_etc_ucb_vs_gap, "ETC / UCB 的期望 regret 随间隙变化"),
+    "bayes-bag": (fig_bayes_bag, "先验与后验：两球袋子的贝叶斯更新"),
+    "ts-sampling": (fig_ts_sampling, "Thompson Sampling 的一次抽样决策"),
+    "ts-vs-ucb": (fig_ts_vs_ucb, "TS 与 UCB1 的累积 regret（含渐进下界）"),
+    "policy-loss": (fig_policy_loss, "策略损失曲线：可容许与被支配"),
+    "posterior-shrink": (fig_posterior_shrink, "后验随采样次数收缩"),
 }
 
 
