@@ -30,7 +30,7 @@ python scripts/figures/make-figures.py --trials 5000     # 曲线更平滑（也
 
 中文标注需要系统里有中文字体：Windows 用微软雅黑或黑体，macOS 用苹方，Linux 装 Noto CJK。一个都没有时脚本自动退回英文标注（图照样能出，只是标签变英文），不会画成方框。
 
-## 十二张图分别在哪、想说明什么
+## 十三张图分别在哪、想说明什么
 
 | slug | 文件 | 用在 | 想说明的一件事 |
 |---|---|---|---|
@@ -46,6 +46,7 @@ python scripts/figures/make-figures.py --trials 5000     # 曲线更平滑（也
 | `ts-sampling` | `ts-sampling.png` | 5 §4.2 | 后验均值低的臂也能赢下一次抽样——探索来自随机化 |
 | `posterior-shrink` | `posterior-shrink.png` | 5 §4.4 | 后验方差 $\propto1/T$，越采越窄 |
 | `ts-vs-ucb` | `ts-vs-ucb.png` | 5 §5.3 | TS 全程低于 UCB1，但 10–90 分位很宽（方差大） |
+| `regret-over-logn` | `regret-over-logn.png` | 5 §5.4 | 把 regret 除以 $\ln n$：TS 到 $n=2\times10^5$ 才 13.5，离 30 还差一半 |
 
 （3b = `multi-armed-bandits-intro`，4b = `from-etc-to-ucb`，5 = `thompson-sampling`。）
 

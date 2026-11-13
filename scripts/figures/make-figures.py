@@ -347,11 +347,13 @@ def fig_one_over_t(out_dir: Path) -> None:
 
 
 # ---------------------------------------------------------------- 图 7–10：Lecture 5（贝叶斯 / Thompson Sampling）
-def _run_bandit(mu, n, trials, policy, rng, etc_m=0, gaussian=True, ucb_c=4.0):
-    r"""并排跑 trials 条轨迹，返回每条轨迹的累积 regret 矩阵 (trials, n)。
+def _run_bandit(mu, n, trials, policy, rng, etc_m=0, gaussian=True, ucb_c=4.0, checkpoints=None):
+    r"""并排跑 trials 条轨迹，返回累积 regret。
 
     policy: "ucb" | "etc" | "ts"。奖励默认 N(mu, 1)；gaussian=False 时用伯努利。
     ucb_c 是 bonus 里 log 的系数：sqrt(c*log t/T)，c=4 是讲义里 δ=1/n² 的版本。
+    checkpoints 给定时只在这些轮次记录，返回 (trials, len(checkpoints)) 的矩阵——
+    跑 n=1e6 那样长的轨迹时，全量记录会占几个 GB。
     """
     mu = np.asarray(mu, dtype=float)
     k, best = len(mu), float(mu.max())
@@ -361,6 +363,8 @@ def _run_bandit(mu, n, trials, policy, rng, etc_m=0, gaussian=True, ucb_c=4.0):
     acc = np.zeros(trials)
     cum = np.empty((trials, n))
     committed = np.full(trials, -1)
+    cp_set = set(int(c) for c in checkpoints) if checkpoints is not None else None
+    snapshots = []
 
     for t in range(1, n + 1):
         mean_hat = sums / np.maximum(counts, 1)
@@ -388,7 +392,13 @@ def _run_bandit(mu, n, trials, policy, rng, etc_m=0, gaussian=True, ucb_c=4.0):
         counts[rows, a] += 1
         sums[rows, a] += reward
         acc += best - mu[a]
-        cum[:, t - 1] = acc
+        if cp_set is not None:
+            if t in cp_set:
+                snapshots.append(acc.copy())
+        else:
+            cum[:, t - 1] = acc
+    if cp_set is not None:
+        return np.column_stack(snapshots)
     return cum
 
 
@@ -573,6 +583,44 @@ def fig_posterior_shrink(out_dir: Path) -> None:
     save(fig, out_dir, "posterior-shrink.png")
 
 
+def fig_regret_over_logn(out_dir: Path, trials: int = 150, seed: int = 9) -> None:
+    r"""把 regret 除以 $\ln n$：看它到底怎么逼近常数 $\sum 2/\Delta_i=30$。
+
+    这张图存在的理由：$2\log n/\Delta$ 经常被当成「n 轮就错这么多次」，
+    但它的常数项是 $O(1)$，而 $\ln n$ 增长得太慢，冲淡这点偏移需要极大的 n。
+    """
+    mu = [0.60, 0.50, 0.40]
+    n_max = 200_000
+    cps = np.unique(np.round(np.logspace(2, math.log10(n_max), 70)).astype(int))
+    ln = np.log(cps)
+    slope = sum(2.0 / (max(mu) - m) for m in mu if m < max(mu))
+
+    ts = _run_bandit(mu, n_max, trials, "ts", np.random.default_rng(seed), checkpoints=cps) / ln
+    ucb = _run_bandit(mu, n_max, trials, "ucb", np.random.default_rng(seed + 1), checkpoints=cps) / ln
+
+    ts_m, ucb_m = ts.mean(0), ucb.mean(0)
+    lo, hi = np.percentile(ts, 10, axis=0), np.percentile(ts, 90, axis=0)
+
+    fig, ax = plt.subplots(figsize=(7.2, 3.9))
+    ax.fill_between(cps, lo, hi, color=VERM, alpha=0.14, lw=0, label=t("TS 的 10–90 分位", "TS 10-90%"))
+    ax.plot(cps, ts_m, color=VERM, lw=2.2, label="Thompson Sampling")
+    ax.plot(cps, ucb_m, color=BLUE, lw=2.0, label="UCB1")
+    ax.axhline(slope, color="#9a9285", ls=(0, (4, 3)), lw=1.3,
+               label=t(rf"$\sum 2/\Delta_i={slope:.0f}$（渐进下界，也是 TS 的极限）",
+                       rf"$\sum 2/\Delta_i={slope:.0f}$"))
+    ax.set_xscale("log")
+    ax.set_xlabel(t("轮数 n（对数轴）", "rounds n (log scale)"))
+    ax.set_ylabel(t(r"$R_n/\ln n$", r"$R_n/\ln n$"))
+    ax.set_title(t(r"把 regret 除以 $\ln n$：收敛有多慢", r"$R_n/\ln n$: how slow the convergence is"))
+    ax.text(0.42, 0.88,
+            t("下界只在 $n\\to\\infty$ 成立：$\\ln n$ 增长太慢，\n$O(1)$ 的偏移要极大的 $n$ 才被冲淡",
+              "the bound is asymptotic only"),
+            transform=ax.transAxes, fontsize=9, color="#5a544a")
+    ax.set_ylim(0, 62)
+    ax.legend(loc="upper left", fontsize=8.5)
+    save(fig, out_dir, "regret-over-logn.png")
+
+
 # slug -> (函数, 说明)
 FIGURES = {
     "arms": (fig_arms, "臂的奖励分布与次优间隙"),
@@ -587,6 +635,7 @@ FIGURES = {
     "ts-vs-ucb": (fig_ts_vs_ucb, "TS 与 UCB1 的累积 regret（含渐进下界）"),
     "policy-loss": (fig_policy_loss, "策略损失曲线：可容许与被支配"),
     "posterior-shrink": (fig_posterior_shrink, "后验随采样次数收缩"),
+    "regret-over-logn": (fig_regret_over_logn, "R_n/ln n 的收敛速度"),
 }
 
 
