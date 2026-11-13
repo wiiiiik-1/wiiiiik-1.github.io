@@ -197,6 +197,8 @@ https://wiiiiik-1.github.io/lecture-notes/
 │  ├─ new-note.mjs         # npm run new 用的新建笔记脚本
 │  ├─ figures/             # 图解生成（Python + matplotlib）
 │  └─ sim/                 # 文章里引用的数值实验
+├─ docs/
+│  └─ CONTENT-MAP.md       # 内容地图：每篇讲什么、还没补什么（给后续会话看）
 ├─ .github/workflows/deploy.yml
 ├─ astro.config.mjs
 └─ package.json
