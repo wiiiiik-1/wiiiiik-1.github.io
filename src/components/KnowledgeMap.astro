@@ -1,0 +1,372 @@
+---
+import { NODES, EDGES, TRACKS, STAGES, type Track } from "../data/knowledge-graph";
+
+const COL_W = 214;
+const ROW_H = 62;
+const NODE_W = 178;
+const NODE_H = 46;
+const PAD_X = 56;
+const PAD_Y = 96;
+
+const ORDER: Record<Track, number> = { math: 0, prob: 1, stat: 2, bandit: 3 };
+
+const byStage = new Map<number, typeof NODES>();
+for (const node of NODES) {
+  const list = byStage.get(node.stage) ?? [];
+  list.push(node);
+  byStage.set(node.stage, list);
+}
+const stageList = [...byStage.keys()].sort((a, b) => a - b);
+for (const stage of stageList) {
+  byStage.get(stage)!.sort(
+    (a, b) => ORDER[a.track] - ORDER[b.track] || a.id.localeCompare(b.id),
+  );
+}
+
+const pos = new Map<string, { x: number; y: number }>();
+const maxRows = Math.max(...stageList.map((stage) => byStage.get(stage)!.length));
+stageList.forEach((stage, col) => {
+  byStage.get(stage)!.forEach((node, row) => {
+    pos.set(node.id, { x: PAD_X + col * COL_W, y: PAD_Y + row * ROW_H });
+  });
+});
+
+const W = PAD_X * 2 + (stageList.length - 1) * COL_W + NODE_W;
+const H = PAD_Y + maxRows * ROW_H + 24;
+
+const edges = EDGES.filter((edge) => pos.has(edge.from) && pos.has(edge.to)).map((edge) => {
+  const a = pos.get(edge.from)!;
+  const b = pos.get(edge.to)!;
+  const x1 = a.x + NODE_W;
+  const y1 = a.y + NODE_H / 2;
+  const x2 = b.x;
+  const y2 = b.y + NODE_H / 2;
+  const dx = Math.max(38, (x2 - x1) * 0.42);
+  return {
+    ...edge,
+    d: `M${x1},${y1} C${x1 + dx},${y1} ${x2 - dx},${y2} ${x2},${y2}`,
+  };
+});
+
+const neighbors: Record<string, string[]> = {};
+for (const node of NODES) neighbors[node.id] = [];
+for (const edge of EDGES) {
+  neighbors[edge.from]?.push(edge.to);
+  neighbors[edge.to]?.push(edge.from);
+}
+
+const stageName = new Map(STAGES.map((item) => [item.stage, item.name]));
+const trackName = new Map(TRACKS.map((item) => [item.id, item.name]));
+---
+
+<div class="kg" data-kg data-filter="all" data-mode="all">
+  <div class="kg-toolbar">
+    <div class="kg-chips" role="group" aria-label="按轨道筛选">
+      <button type="button" class="kg-chip is-on" data-filter-btn="all">全部</button>
+      {TRACKS.map((track) => (
+        <button type="button" class="kg-chip" data-filter-btn={track.id} title={track.desc}>
+          <span class={`kg-dot kg-dot--${track.id}`} aria-hidden="true"></span>{track.name}
+        </button>
+      ))}
+    </div>
+    <div class="kg-chips">
+      <button type="button" class="kg-chip kg-chip--mode" data-mode-btn="all">全部连线</button>
+      <button type="button" class="kg-chip kg-chip--mode" data-mode-btn="req">只看前置</button>
+    </div>
+  </div>
+
+  <div class="kg-scroll">
+    <svg
+      class="kg-svg"
+      viewBox={`0 0 ${W} ${H}`}
+      width={W}
+      height={H}
+      role="img"
+      aria-label="概率论与 bandits 的知识点拓扑图"
+      data-neighbors={JSON.stringify(neighbors)}
+    >
+      <g class="kg-heads">
+        {stageList.map((stage, col) => (
+          <text
+            x={PAD_X + col * COL_W + NODE_W / 2}
+            y={62}
+            text-anchor="middle"
+            class="kg-head"
+          >{stageName.get(stage)}</text>
+        ))}
+      </g>
+
+      <g class="kg-edges">
+        {edges.map((edge) => (
+          <path
+            class={`kg-edge kg-edge--${edge.kind}`}
+            d={edge.d}
+            data-from={edge.from}
+            data-to={edge.to}
+            data-kind={edge.kind}
+          >
+            {edge.label && <title>{edge.label}</title>}
+          </path>
+        ))}
+      </g>
+
+      <g class="kg-nodes">
+        {NODES.map((node) => {
+          const p = pos.get(node.id)!;
+          const body = (
+            <g class={`kg-node kg-node--${node.track}`} data-id={node.id} data-track={node.track}>
+              <rect x="0" y="0" width={NODE_W} height={NODE_H} rx="7" />
+              <text x={NODE_W / 2} y={node.sub ? 20 : 28} text-anchor="middle" class="kg-label">
+                {node.label}
+              </text>
+              {node.sub && (
+                <text x={NODE_W / 2} y={36} text-anchor="middle" class="kg-sub">{node.sub}</text>
+              )}
+              <title>{node.note}</title>
+            </g>
+          );
+          return (
+            <g transform={`translate(${p.x}, ${p.y})`}>
+              {node.href ? <a href={node.href} class="kg-hit">{body}</a> : body}
+            </g>
+          );
+        })}
+      </g>
+    </svg>
+  </div>
+
+  <div class="kg-legend">
+    <span><i class="kg-line kg-line--req"></i>前置 / 必须</span>
+    <span><i class="kg-line kg-line--use"></i>使用 / 推导</span>
+    <span><i class="kg-line kg-line--contrast"></i>对照（两条路）</span>
+    <span><i class="kg-line kg-line--template"></i>同一个模板</span>
+    <span class="kg-hint">悬停看邻居，点击跳到对应小节</span>
+  </div>
+</div>
+
+<script is:inline>
+  (() => {
+    const root = document.querySelector("[data-kg]");
+    if (!root) return;
+    const svg = root.querySelector("svg");
+    const neighbors = JSON.parse(svg.dataset.neighbors || "{}");
+    const nodes = Array.from(root.querySelectorAll(".kg-node"));
+    const edges = Array.from(root.querySelectorAll(".kg-edge"));
+
+    const clear = () => {
+      root.classList.remove("has-active");
+      nodes.forEach((node) => node.classList.remove("is-near"));
+      edges.forEach((edge) => edge.classList.remove("is-near"));
+    };
+
+    const activate = (id) => {
+      const near = new Set([id, ...(neighbors[id] || [])]);
+      root.classList.add("has-active");
+      nodes.forEach((node) => node.classList.toggle("is-near", near.has(node.dataset.id)));
+      edges.forEach((edge) =>
+        edge.classList.toggle(
+          "is-near",
+          edge.dataset.from === id || edge.dataset.to === id,
+        ),
+      );
+    };
+
+    nodes.forEach((node) => {
+      node.addEventListener("mouseenter", () => activate(node.dataset.id));
+      node.addEventListener("focusin", () => activate(node.dataset.id));
+    });
+    root.querySelector(".kg-scroll").addEventListener("mouseleave", clear);
+    nodes.forEach((node) => node.addEventListener("blur", clear));
+
+    root.querySelectorAll("[data-filter-btn]").forEach((button) => {
+      button.addEventListener("click", () => {
+        root.dataset.filter = button.dataset.filterBtn;
+        root.querySelectorAll("[data-filter-btn]").forEach((other) =>
+          other.classList.toggle("is-on", other === button),
+        );
+        const track = button.dataset.filterBtn;
+        nodes.forEach((node) =>
+          node.classList.toggle("is-off", track !== "all" && node.dataset.track !== track),
+        );
+        edges.forEach((edge) => {
+          const a = root.querySelector(`.kg-node[data-id="${edge.dataset.from}"]`);
+          const b = root.querySelector(`.kg-node[data-id="${edge.dataset.to}"]`);
+          const same =
+            track === "all" ||
+            (a?.dataset.track === track && b?.dataset.track === track);
+          edge.classList.toggle("is-off", !same);
+        });
+      });
+    });
+
+    root.querySelectorAll("[data-mode-btn]").forEach((button) => {
+      button.addEventListener("click", () => {
+        root.dataset.mode = button.dataset.modeBtn;
+        root.querySelectorAll("[data-mode-btn]").forEach((other) =>
+          other.classList.toggle("is-on", other === button),
+        );
+      });
+    });
+  })();
+</script>
+
+<style>
+  .kg {
+    margin: 2rem 0 2.4rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--paper-lift);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .kg-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.4rem;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px dashed var(--line);
+  }
+
+  .kg-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .kg-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.6rem;
+    font: inherit;
+    font-size: 0.78rem;
+    color: var(--muted);
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  }
+
+  .kg-chip:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+  }
+
+  .kg-chip.is-on {
+    color: var(--paper-lift);
+    background: var(--ink);
+    border-color: var(--ink);
+  }
+
+  .kg-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+  }
+  .kg-dot--math { background: #a67c48; }
+  .kg-dot--prob { background: var(--blue); }
+  .kg-dot--stat { background: #3f6b52; }
+  .kg-dot--bandit { background: var(--accent); }
+
+  .kg-scroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.4rem 0 0.2rem;
+  }
+
+  .kg-svg {
+    display: block;
+    max-width: none;
+  }
+
+  .kg-head {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    fill: var(--faint);
+  }
+
+  .kg-edge {
+    fill: none;
+    stroke: var(--line-strong);
+    stroke-width: 1.1;
+    opacity: 0.55;
+    transition: opacity 0.15s ease, stroke 0.15s ease, stroke-width 0.15s ease;
+  }
+  .kg-edge--req { stroke-width: 1.5; }
+  .kg-edge--contrast { stroke-dasharray: 5 4; }
+  .kg-edge--template { stroke: var(--accent); stroke-dasharray: 1.5 3.5; stroke-linecap: round; }
+
+  .kg-node rect {
+    fill: var(--paper);
+    stroke: var(--line-strong);
+    stroke-width: 1;
+    transition: fill 0.15s ease, stroke 0.15s ease, opacity 0.15s ease;
+  }
+
+  .kg-node--math rect { stroke: #a67c48; }
+  .kg-node--prob rect { stroke: var(--blue); }
+  .kg-node--stat rect { stroke: #3f6b52; }
+  .kg-node--bandit rect { stroke: var(--accent); }
+
+  .kg-label {
+    font-size: 12.5px;
+    font-weight: 600;
+    fill: var(--ink);
+    pointer-events: none;
+  }
+
+  .kg-sub {
+    font-family: var(--mono);
+    font-size: 10px;
+    fill: var(--muted);
+    pointer-events: none;
+  }
+
+  .kg-hit { cursor: pointer; }
+  .kg-hit:hover .kg-node rect,
+  .kg-node:hover rect {
+    fill: var(--paper-deep);
+  }
+
+  .kg.has-active .kg-node:not(.is-near) { opacity: 0.28; }
+  .kg.has-active .kg-edge:not(.is-near) { opacity: 0.1; }
+  .kg.has-active .kg-edge.is-near { opacity: 0.95; stroke: var(--accent); stroke-width: 1.8; }
+
+  .kg-node.is-off { opacity: 0.12; }
+  .kg-edge.is-off { opacity: 0.06; }
+  .kg[data-mode="req"] .kg-edge--use,
+  .kg[data-mode="req"] .kg-edge--contrast,
+  .kg[data-mode="req"] .kg-edge--template { opacity: 0.05; }
+
+  .kg-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem 1.1rem;
+    padding: 0.65rem 1rem 0.85rem;
+    border-top: 1px dashed var(--line);
+    font-size: 0.76rem;
+    color: var(--muted);
+  }
+
+  .kg-legend span { display: inline-flex; align-items: center; gap: 0.35rem; }
+
+  .kg-line {
+    display: inline-block;
+    width: 22px;
+    height: 0;
+    border-top: 1.4px solid var(--line-strong);
+  }
+  .kg-line--req { border-top-width: 2px; }
+  .kg-line--contrast { border-top-style: dashed; }
+  .kg-line--template { border-top: 1.4px dotted var(--accent); }
+
+  .kg-hint { margin-left: auto; font-style: italic; color: var(--faint); }
+
+  @media (max-width: 720px) {
+    .kg-hint { display: none; }
+  }
+</style>

@@ -1,0 +1,421 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import KnowledgeMap from "../components/KnowledgeMap.astro";
+import {
+  CHAPTERS,
+  CHAPTER_EDGES,
+  NODES,
+  STAGES,
+  TRACKS,
+} from "../data/knowledge-graph";
+
+const stageName = new Map(STAGES.map((item) => [item.stage, item.name]));
+const trackName = new Map(TRACKS.map((item) => [item.id, item.name]));
+
+const dependsOn = new Map<string, string[]>();
+for (const edge of CHAPTER_EDGES) {
+  const list = dependsOn.get(edge.to) ?? [];
+  list.push(edge.from);
+  dependsOn.set(edge.to, list);
+}
+
+const byStage = new Map<number, typeof NODES>();
+for (const node of NODES) {
+  const list = byStage.get(node.stage) ?? [];
+  list.push(node);
+  byStage.set(node.stage, list);
+}
+const stageList = [...byStage.keys()].sort((a, b) => a - b);
+
+const routes = [
+  {
+    title: "最短路径：只要看得懂 bandits",
+    steps: ["math", "prob", "mab", "ucb", "ts"],
+    note: "跳过数理统计的检验细节，但 KL、Hoeffding、后验三件事不能跳。",
+  },
+  {
+    title: "补齐前置：从零到第 4 篇",
+    steps: ["math", "prob", "stat", "hyp", "mab", "ucb", "ts"],
+    note: "推荐路线。第 1 篇里那张四格表，是把「检验」和「决策」接上的地方。",
+  },
+  {
+    title: "倒着读：先看结论再补基础",
+    steps: ["ts", "ucb", "mab", "stat", "prob", "math"],
+    note: "每遇到一个不认识的符号，就顺着图往回跳一节。",
+  },
+];
+---
+
+<BaseLayout
+  title="知识拓扑"
+  description="概率论、数理统计与多臂老虎机：知识点之间的依赖关系、章节顺序与三条阅读路线。"
+>
+  <header class="page-header">
+    <div class="container">
+      <p class="page-kicker">Knowledge map</p>
+      <h1 class="page-title">知识拓扑</h1>
+      <p class="page-description">
+        把八篇笔记拆成 {NODES.length} 个知识点，按「谁必须先有」连起来。横轴是依赖顺序，不是阅读顺序。
+      </p>
+    </div>
+  </header>
+
+  <div class="container page-body">
+    <section class="map-lead prose">
+      <p>
+        之前每一篇都在讲自己的事：第 1 篇讲检验，第 2 篇讲 regret，第 3 篇推 UCB 的界。
+        但它们其实共用一套很小的地基——期望的线性性、Hoeffding 不等式、贝叶斯定理。
+        <strong>这张图就是那套地基的展开</strong>：每个方块是一个知识点，箭头是「读后者之前得先有前者」。
+      </p>
+      <p>
+        图里没有绝对的先后。它只回答三个问题：这个符号是哪来的、它在哪一节被用到、忘了的话该回去补哪一段。
+        鼠标停在方块上会点亮它的邻居，点击直接跳到对应小节。
+      </p>
+    </section>
+
+    <section class="chapter-block" aria-labelledby="chapter-title">
+      <div class="section-head">
+        <h2 class="section-title" id="chapter-title">篇与篇之间</h2>
+        <p class="section-note">主链 + 一条旁路</p>
+      </div>
+
+      <div class="chapter-rail">
+        {CHAPTERS.map((chapter, index) => (
+          <div class="chapter-cell">
+            <a class={`chapter-card chapter-card--${chapter.tone}`} href={`/posts/${chapter.slug}/`}>
+              <span class="chapter-eyebrow">{chapter.eyebrow}</span>
+              <span class="chapter-name">{chapter.label}</span>
+              <span class="chapter-note">{chapter.note}</span>
+            </a>
+            {index < CHAPTERS.length - 1 && (
+              <span class="chapter-arrow" aria-hidden="true">
+                {CHAPTER_EDGES[index]?.label ?? "→"}
+              </span>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <p class="chapter-foot">
+        导论 <a href="/posts/bandits-series-intro/">《从一道暴雨预警开始》</a> 不属于主链，
+        它把上面七篇的动机串起来，随时可以插进来读。
+      </p>
+    </section>
+
+    <section aria-labelledby="graph-title">
+      <div class="section-head">
+        <h2 class="section-title" id="graph-title">知识点拓扑</h2>
+        <p class="section-note">{NODES.length} 个节点 · {TRACKS.length} 条轨道 · 悬停看邻居</p>
+      </div>
+      <KnowledgeMap />
+    </section>
+
+    <section class="route-block" aria-labelledby="route-title">
+      <div class="section-head">
+        <h2 class="section-title" id="route-title">三条路线</h2>
+        <p class="section-note">同一张图，三种读法</p>
+      </div>
+
+      <div class="route-grid">
+        {routes.map((route) => (
+          <article class="route-card">
+            <h3>{route.title}</h3>
+            <ol class="route-steps">
+              {route.steps.map((id) => {
+                const chapter = CHAPTERS.find((item) => item.id === id);
+                return chapter ? (
+                  <li><a href={`/posts/${chapter.slug}/`}>{chapter.label}</a></li>
+                ) : null;
+              })}
+            </ol>
+            <p class="route-note">{route.note}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+
+    <section class="matrix-block" aria-labelledby="matrix-title">
+      <div class="section-head">
+        <h2 class="section-title" id="matrix-title">章节依赖矩阵</h2>
+        <p class="section-note">行依赖列，「·」表示无直接前置</p>
+      </div>
+
+      <div class="table-scroll">
+        <table class="dep-matrix">
+          <thead>
+            <tr>
+              <th scope="col">篇目</th>
+              {CHAPTERS.map((chapter) => (
+                <th scope="col" title={chapter.label}>
+                  {chapter.eyebrow.replace("前置 ", "前").replace("第 ", "").replace(" 篇", "")}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {CHAPTERS.map((row) => (
+              <tr>
+                <th scope="row"><a href={`/posts/${row.slug}/`}>{row.label}</a></th>
+                {CHAPTERS.map((col) => {
+                  const hit = (dependsOn.get(row.id) ?? []).includes(col.id);
+                  return (
+                    <td class={hit ? "dep-hit" : "dep-none"}>
+                      {hit ? "●" : "·"}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="index-block" aria-labelledby="index-title">
+      <div class="section-head">
+        <h2 class="section-title" id="index-title">按阶段索引</h2>
+        <p class="section-note">图的可点版本，方便复制链接</p>
+      </div>
+
+      {stageList.map((stage) => (
+        <details class="stage-row">
+          <summary>
+            <span class="stage-no">{String(stage).padStart(2, "0")}</span>
+            <span class="stage-name">{stageName.get(stage)}</span>
+            <span class="stage-count">{byStage.get(stage)!.length} 个知识点</span>
+          </summary>
+          <ul class="stage-list">
+            {byStage.get(stage)!.map((node) => (
+              <li>
+                <span class={`track-tag track-tag--${node.track}`}>{trackName.get(node.track)}</span>
+                {node.href ? (
+                  <a href={node.href}>{node.label}</a>
+                ) : (
+                  <span>{node.label}</span>
+                )}
+                <span class="stage-note">{node.note}</span>
+              </li>
+            ))}
+          </ul>
+        </details>
+      ))}
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .map-lead { margin-bottom: 2.6rem; }
+
+  .chapter-rail {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    align-items: stretch;
+  }
+
+  .chapter-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+  }
+
+  .chapter-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    width: 176px;
+    padding: 0.7rem 0.8rem 0.75rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--paper-lift);
+    text-decoration: none;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  }
+
+  .chapter-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--line-strong);
+  }
+
+  .chapter-card--math { border-top: 3px solid #a67c48; }
+  .chapter-card--prob { border-top: 3px solid var(--blue); }
+  .chapter-card--stat { border-top: 3px solid #3f6b52; }
+  .chapter-card--bandit { border-top: 3px solid var(--accent); }
+
+  .chapter-eyebrow {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--faint);
+  }
+
+  .chapter-name {
+    font-weight: 600;
+    font-size: 0.92rem;
+    color: var(--ink);
+    line-height: 1.35;
+  }
+
+  .chapter-note {
+    font-size: 0.74rem;
+    color: var(--muted);
+    line-height: 1.45;
+  }
+
+  .chapter-arrow {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--faint);
+    max-width: 64px;
+    line-height: 1.3;
+    text-align: center;
+  }
+
+  .chapter-foot {
+    margin-top: 0.9rem;
+    font-size: 0.82rem;
+    color: var(--muted);
+  }
+
+  .route-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+  }
+
+  .route-card {
+    padding: 0.9rem 1rem 1rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--paper-lift);
+  }
+
+  .route-card h3 {
+    margin: 0 0 0.5rem;
+    font-size: 0.95rem;
+  }
+
+  .route-steps {
+    margin: 0 0 0.6rem;
+    padding-left: 1.1rem;
+    font-size: 0.84rem;
+    line-height: 1.7;
+  }
+
+  .route-note {
+    margin: 0;
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .table-scroll { overflow-x: auto; }
+
+  .dep-matrix {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+  }
+
+  .dep-matrix th,
+  .dep-matrix td {
+    padding: 0.45rem 0.5rem;
+    border-bottom: 1px solid var(--line);
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .dep-matrix thead th {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--faint);
+    font-weight: 500;
+  }
+
+  .dep-matrix tbody th {
+    text-align: left;
+    font-weight: 500;
+  }
+
+  .dep-matrix tbody th a { color: var(--ink); text-decoration: none; }
+  .dep-matrix tbody th a:hover { color: var(--accent); }
+
+  .dep-hit { color: var(--accent); }
+  .dep-none { color: var(--line-strong); }
+
+  .stage-row {
+    border-bottom: 1px solid var(--line);
+    padding: 0.35rem 0;
+  }
+
+  .stage-row summary {
+    display: flex;
+    gap: 0.7rem;
+    align-items: baseline;
+    cursor: pointer;
+    padding: 0.35rem 0;
+    list-style: none;
+  }
+
+  .stage-row summary::-webkit-details-marker { display: none; }
+
+  .stage-no {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--faint);
+  }
+
+  .stage-name { font-weight: 600; font-size: 0.88rem; }
+
+  .stage-count {
+    margin-left: auto;
+    font-size: 0.74rem;
+    color: var(--faint);
+  }
+
+  .stage-list {
+    margin: 0.2rem 0 0.8rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  .stage-list li {
+    padding: 0.3rem 0 0.3rem 1.1rem;
+    font-size: 0.84rem;
+    line-height: 1.55;
+  }
+
+  .stage-list a { color: var(--ink); }
+  .stage-list a:hover { color: var(--accent); }
+
+  .track-tag {
+    display: inline-block;
+    margin-right: 0.45rem;
+    padding: 0.05rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.68rem;
+    font-family: var(--mono);
+  }
+
+  .track-tag--math { background: #efe2cf; color: #7a5a2f; }
+  .track-tag--prob { background: var(--blue-soft); color: var(--blue); }
+  .track-tag--stat { background: #dfe9e0; color: #3f6b52; }
+  .track-tag--bandit { background: var(--accent-soft); color: var(--accent-deep); }
+
+  .stage-note {
+    display: block;
+    color: var(--muted);
+    font-size: 0.78rem;
+  }
+
+  [data-theme="dark"] .track-tag--math { background: #33291d; color: #d6b78a; }
+  [data-theme="dark"] .track-tag--stat { background: #1e2b22; color: #8fb99a; }
+
+  @media (max-width: 720px) {
+    .chapter-card { width: 100%; }
+    .chapter-cell { flex-direction: column; align-items: stretch; width: 100%; }
+    .chapter-arrow { display: none; }
+  }
+</style>
