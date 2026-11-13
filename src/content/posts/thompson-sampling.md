@@ -72,7 +72,13 @@ $$
 2\sqrt{\frac{4\log n}{T_i}}=\sqrt{\frac{16\log n}{T_i}}.
 $$
 
-**index 加的是半宽（bonus），宽度是半宽的两倍。** 讲义之所以在讲「宽度」时写 16，是为了后面对上「$T_i\ge16\log n/\Delta_i^2$ 时区间窄于 $\Delta_i$」这个结论——那里用的是宽度的平方除以 4，正好回到 $4\log n$。
+**index 加的是半宽（bonus），宽度是半宽的两倍。** 讲义在讲「宽度」时写成 $16$，是因为它后面要用的判据是「区间整体窄于 $\Delta_i$」，即
+
+$$
+2\sqrt{\frac{4\log n}{T_i}}<\Delta_i\quad\Longleftrightarrow\quad T_i>\frac{16\log n}{\Delta_i^2}.
+$$
+
+用宽度写，$16$ 这个阈值可以直接读出来；用 bonus 写，阈值会是个带着 $4$ 的别扭式子。
 
 > **补：那个 4 是从哪来的？**
 >
