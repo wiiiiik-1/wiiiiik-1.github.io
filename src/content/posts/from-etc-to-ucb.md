@@ -15,6 +15,8 @@ lang: "zh-CN"
 
 ---
 
+> **在拓扑中的位置**：[知识拓扑](/map/) 里「ETC / UCB」那两列的整段；前置是 [多臂老虎机入门](/posts/multi-armed-bandits-intro/)，工具来自 [数学工具箱](/posts/math-toolbox/) 的 Hoeffding 与 union bound。
+
 ## 0. 十三页在做一件事：把「探索预算」从常数改成数据驱动
 
 ```text

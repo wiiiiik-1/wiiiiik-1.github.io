@@ -24,6 +24,8 @@ lang: "zh-CN"
 
 ---
 
+> **在拓扑中的位置**：[知识拓扑](/map/) 里「检验 → p 值 → 后验」那一列的中段；直接前置是 [数理统计基础](/posts/statistics-foundations/)，往后接 [多臂老虎机](/posts/multi-armed-bandits-intro/)。
+
 ## 0. 先给结论：两份讲义其实在讲同一件事
 
 两份讲义看起来是两个主题，实际上共用同一个概率模型：

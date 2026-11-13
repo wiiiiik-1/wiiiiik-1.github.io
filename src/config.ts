@@ -7,6 +7,7 @@ export const SITE = {
   github: "https://github.com/wiiiiik-1",
   nav: [
     { label: "笔记", href: "/posts/" },
+    { label: "拓扑", href: "/map/" },
     { label: "标签", href: "/tags/" },
     { label: "归档", href: "/archive/" },
     { label: "关于", href: "/about/" },

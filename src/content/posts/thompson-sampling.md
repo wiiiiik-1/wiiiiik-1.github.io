@@ -15,6 +15,8 @@ lang: "zh-CN"
 
 ---
 
+> **在拓扑中的位置**：[知识拓扑](/map/) 最右一列「Thompson / 下界」；前置是 [从 ETC 到 UCB](/posts/from-etc-to-ucb/) 与 [数理统计基础](/posts/statistics-foundations/) 里的共轭后验。
+
 ## 0. 十四页在做什么：从「乐观」换到「相信」
 
 ```text

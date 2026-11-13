@@ -15,6 +15,8 @@ lang: "zh-CN"
 
 ---
 
+> **在拓扑中的位置**：[知识拓扑](/map/) 里「序列决策」这一段的起点；直接前置是 [第 1 篇](/posts/hypothesis-testing-and-estimation/)，往后接 [从 ETC 到 UCB](/posts/from-etc-to-ucb/)。
+
 ## 0. 一条线看懂这十页
 
 讲义的推进顺序非常干净，本质上是四步：

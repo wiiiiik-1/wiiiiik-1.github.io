@@ -1,14 +1,14 @@
 # 博客内容地图（给后续会话）
 
 > **用途**：让新的会话不必先读完 5 篇、约 10 万字符，就能知道这里**有什么、怎么写的、还能补什么**。
-> **最后更新**：2026-11-13（第 4 篇 Thompson Sampling 上线，图解增至 13 张）
+> **最后更新**：2026-11-13（新增前置三章 + 知识拓扑页 `/map/`，篇目从 5 篇增至 8 篇）
 > **状态**：本地 = 远端 = 已部署，CI 全绿。
 
 ---
 
 ## 0. 一句话现状
 
-一个 Ink & Paper 风格的数学笔记站，核心是**一个四篇的 bandits 系列**（假设检验 → 多臂老虎机 → ETC/UCB → Thompson Sampling），外加一篇把四篇串起来的导论。所有示意图都由脚本生成、可复现；每篇末尾都附手写讲义原页扫描。
+一个 Ink & Paper 风格的数学笔记站。主体是**一个四篇的 bandits 系列**（假设检验 → 多臂老虎机 → ETC/UCB → Thompson Sampling）+ 一篇导论，前面再补**三篇前置章节**（数学工具箱 → 概率论基础 → 数理统计基础），外加一个把八篇拆成 45 个知识点、75 条依赖边的**知识拓扑页 `/map/`**。示意图由脚本生成、可复现；每篇末尾附手写讲义原页扫描。
 
 ---
 
@@ -21,7 +21,7 @@
 | 技术栈 | Astro 5.18.2 + Markdown + `remark-math` / `rehype-katex`（构建时渲染公式） |
 | 部署 | push 到 `main` → `.github/workflows/deploy.yml` → GitHub Pages，约 2 分钟 |
 | 本地命令 | `npm install` / `npm run dev` / `npm run build` / `npm run new -- "标题" slug "标签"` |
-| 页面 | `/` 首页、`/posts/`、`/posts/<slug>/`、`/tags/`、`/archive/`、`/about/`、`/rss.xml` |
+| 页面 | `/` 首页、`/posts/`、`/posts/<slug>/`、`/map/`（知识拓扑）、`/tags/`、`/archive/`、`/about/`、`/rss.xml` |
 
 内容集合的 schema 在 `src/content.config.ts`：`title, description, date, updated?, tags[], draft, featured, pdf?, lang`。
 
@@ -31,6 +31,9 @@
 
 | 文件 | 标题 | 日期 | 行数 | 字符 | 首页大卡 | 手稿页 | 图解 |
 |---|---|---|---|---|---|---|---|
+| `math-toolbox.md` | 数学工具箱：写概率推导之前该备好的六件事 | 2026-11-01 | 340 | 9.0k | – | – | 1（复用） |
+| `probability-foundations.md` | 概率论基础：从公理到中心极限定理 | 2026-11-02 | 330 | 10.4k | – | – | 0 |
+| `statistics-foundations.md` | 数理统计基础：估计、区间与检验 | 2026-11-03 | 400 | 10.3k | – | – | 0 |
 | `bandits-series-intro.md` | 系列导论：从一道暴雨预警，到假设检验与多臂老虎机 | 2026-11-06 | 384 | 9.4k | ✅ | – | 1 |
 | `hypothesis-testing-and-estimation.md` | 假设检验与参数估计：两份讲义的中英对照精读笔记 | 2026-10-23 | 1597 | 36.7k | ✅ | 3 图 | 0 |
 | `multi-armed-bandits-intro.md` | 多臂老虎机入门：从 Regret 到 Explore-Then-Commit | 2026-10-30 | 610 | 16.8k | – | 10 页 | 2 |
@@ -43,6 +46,16 @@
 ---
 
 ## 3. 逐篇摘要
+
+### 3.0 前置三章（2026-11 新增）
+
+**定位**：bandits 系列的地板。三篇按依赖顺序排：数学工具 → 概率论 → 数理统计。它们不是某节课的笔记，而是把前面几篇「用到了但没解释」的东西集中补齐，材料参照 DeGroot & Schervish 4th ed.（Ch.1–6 概率、Ch.7–9 统计）。
+
+- `math-toolbox`：记号、求和与 $H_n$、三个对数不等式、$O/o/\Theta$、五个概率不等式（Markov / Chebyshev / Hoeffding / union bound / Jensen）、Stirling、KL 散度、速查表、六个坑。
+- `probability-foundations`：概率公理与容斥、条件概率与贝叶斯（含基础率陷阱）、独立性（两两≠相互）、随机变量与 8 个常见分布表、期望/条件期望/指示函数、方差与协方差、LLN 与 CLT、与后文的接口表。
+- `statistics-foundations`：参数模型与似然、抽样分布（$\chi^2/t/F$ 与 $n-1$ 的来历）、偏差与 MSE 分解、Fisher 信息与 Cramér–Rao、置信区间（正态 / Wilson / Hoeffding / 覆盖率读法）、检验与 Neyman–Pearson / p 值、Beta–Bernoulli 与 Normal–Normal 共轭、与 bandits 的接口表。
+
+三篇之间用「上一篇 / 下一篇」硬链接串起来，结尾都指向下一章；导论 §6 的篇目表已同步为八篇。
 
 ### 3.1 导论 `bandits-series-intro`（系列 hub）
 
@@ -137,6 +150,8 @@
 | 看构建是否成功 | `node work/wait-run.mjs <sha>` 或 `node work/poll-run.mjs`（GitHub API） |
 | 检查线上图是否 200 | `node work/check-ts.mjs`（还顺带查 KaTeX 数量、残留定界符、互链、首页收录） |
 | 本地无法用 `web_fetch` | 本站域名解析到 198.18.x（TUN 假 IP），一律用 `node` 的 `fetch` 走 `work/*.mjs` |
+| 本地构建 | `node node_modules/astro/astro.js build`（没有 `.bin`，要走这个入口）。沙箱下会 `spawn EPERM`（Vite 的 realpath 优化），需要一次 `danger-full-access`；同理 `npm install` 也要提权 |
+| 锚点校验 | build 后逐条比对 `src/data/knowledge-graph.ts` 里的 `href` 与 `dist` 里的 `id` |
 
 ---
 
@@ -152,7 +167,9 @@
 **工程**
 6. **手稿页体积偏大**：每篇 2–3 MB 的 JPEG。若要优化，可换 WebP（视觉无损，约省 40%）或加 `loading="lazy"`。
 7. **`work/` 是 scratch（已 gitignore）**：里面的 `check-*.mjs`、`pdf-render.py` 等没入库。若想让别人复现「PDF → 笔记」的流程，可挑几个整理进 `scripts/`。
-8. **`refs/` 是本地参考资料（已 gitignore）**：目前有一本 DeGroot《Probability and Statistics》，明显是为后续贝叶斯内容准备的。
+8. **`refs/` 是本地参考资料（已 gitignore）**：目前有一本 DeGroot《Probability and Statistics》（911 页，含文本层）。前置三章已按它 Ch.1–9 的框架组织；后续若写贝叶斯或回归，可以直接从 Ch.7–9、Ch.11 取材料。
+9. **拓扑页的节点数是手写的**：导论 §6 里写死「45 个知识点」，改 `src/data/knowledge-graph.ts` 的 `NODES` 后要同步这一句（`/map/` 页本身用的是 `NODES.length`，不会错）。
+10. **每篇开头没有「本节的拓扑位置」小图**：目前只有导论、以及五篇系列正文顶部的一行「在拓扑中的位置」。若想每篇都有一张局部子图，可以在 `knowledge-graph.ts` 里给节点加 `post` 字段再按篇滤一遍。
 
 ---
 
@@ -172,6 +189,12 @@
 3. 复制进 `public/images/bandit-figures/`（需提权）；
 4. 文章里 `![alt](/images/bandit-figures/x.png)` + `*看图要点*`；
 5. 更新 `scripts/figures/README.md` 的表与张数。
+
+**加 / 改一个拓扑节点**
+1. `src/data/knowledge-graph.ts`：往 `NODES` 加一项（`id/label/track/stage/href/note`），往 `EDGES` 加依赖边（`req` 前置 / `use` 使用 / `contrast` 对照 / `template` 同模板）；
+2. **边的两端 stage 必须左小右大**，否则线会往回画；
+3. `href` 指向某一节的锚点，锚点由标题自动生成，**标题里有公式时别手写锚点**：KaTeX 会改写标题文本，实际 id 往往变成 `73-o-与渐近记号`、`43-定量tiδi216logn` 这种。正确做法是先 build，再在 `dist/posts/<slug>/index.html` 里搜 `<h2 id=`，抄真实 id；
+4. 改完 build 一次，跑一遍「锚点全量校验」（读 `dist` 里的 html，逐个 `href` 查 `id="…"` 是否存在）。
 
 **改公式/文字**
 - 只动 `.md`，push 即可；CI 会自动重建。
