@@ -2,6 +2,7 @@
 import { render } from "astro:content";
 import BaseLayout from "./BaseLayout.astro";
 import Toc from "../components/Toc.astro";
+import KnowledgeMap from "../components/KnowledgeMap.astro";
 import type { Post } from "../utils";
 import { formatDate, readingTime } from "../utils";
 
@@ -64,6 +65,14 @@ const minutes = readingTime(post.body ?? "");
       <article class="prose" data-article>
         <Content />
       </article>
+
+      <section class="post-map" aria-labelledby="post-map-title">
+        <div class="post-map-head">
+          <h2 id="post-map-title">本篇在拓扑中的位置</h2>
+          <p>朱砂色是这一篇直接讲的节点，其余是它的前置；点方块可跳到对应小节。</p>
+        </div>
+        <KnowledgeMap post={post.id} compact />
+      </section>
 
       {post.data.pdf && (
         <p class="post-pdf">
@@ -139,4 +148,24 @@ const minutes = readingTime(post.body ?? "");
       onScroll();
     })();
   </script>
+
+  <style>
+    .post-map {
+      margin-top: 2.6rem;
+      padding-top: 1.3rem;
+      border-top: 1px solid var(--line);
+    }
+
+    .post-map-head h2 {
+      margin: 0 0 0.3rem;
+      font-size: 1rem;
+      letter-spacing: 0.01em;
+    }
+
+    .post-map-head p {
+      margin: 0 0 0.5rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+  </style>
 </BaseLayout>

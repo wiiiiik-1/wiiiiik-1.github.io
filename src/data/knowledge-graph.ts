@@ -54,9 +54,9 @@ export const NODES: GraphNode[] = [
   { id: "logineq", label: "对数不等式", sub: "1 − x ≤ e⁻ˣ", track: "math", stage: 0,
     href: "/posts/math-toolbox/#3-对数与指数三个反复用的不等式", note: "把 (1−Δ²/4)^m 换成 e^{−mΔ²/4}，ETC 的指数衰减全靠它。" },
   { id: "bigo", label: "渐进记号", sub: "O / o / Θ", track: "math", stage: 0,
-    href: "/posts/bandits-series-intro/#73-o-与渐近记号", note: "「O(log n) 已经不能再好」这句话，离开 O 就没法说清楚。" },
+    href: "/posts/math-toolbox/#4-渐进记号", note: "「O(log n) 已经不能再好」这句话，离开 O 就没法说清楚。" },
   { id: "tail", label: "尾界不等式", sub: "Hoeffding / Chernoff", track: "math", stage: 0,
-    href: "/posts/bandits-series-intro/#75-两个常用的尾界", note: "置信区间、UCB 的 bonus、TS 的后验收缩，都从这里出发。" },
+    href: "/posts/math-toolbox/#5-五个概率不等式", note: "置信区间、UCB 的 bonus、TS 的后验收缩，都从这里出发。" },
   { id: "jensen", label: "凸性与 Jensen", sub: "E[φ(X)] ≥ φ(E X)", track: "math", stage: 0,
     href: "/posts/math-toolbox/#5-五个概率不等式", note: "KL ≥ 0、Cramér–Rao 的证明骨架，都只是这一行。" },
   { id: "stirling", label: "Stirling 公式", sub: "n! ≈ √(2πn)·(n/e)ⁿ", track: "math", stage: 0,
@@ -70,7 +70,7 @@ export const NODES: GraphNode[] = [
   { id: "indep", label: "独立性", sub: "P(AB)=P(A)P(B)", track: "prob", stage: 1,
     href: "/posts/probability-foundations/#24-独立性", note: "union bound 之所以能乘，t 检验之所以能合并方差，都靠它。" },
   { id: "kl", label: "KL 散度", sub: "KL(P‖Q) ≥ 0", track: "math", stage: 1,
-    href: "/posts/thompson-sampling/#55-定理的边界为什么要先各试一次", note: "bandit 下界的「距离」是 KL，不是欧氏距离。" },
+    href: "/posts/math-toolbox/#7-kl-散度", note: "bandit 下界的「距离」是 KL，不是欧氏距离。" },
 
   // ---------- stage 2：随机变量 ----------
   { id: "rv", label: "随机变量", track: "prob", stage: 2,
@@ -284,3 +284,64 @@ export const CHAPTER_EDGES: { from: string; to: string; label?: string }[] = [
   { from: "mab", to: "ucb" },
   { from: "ucb", to: "ts" },
 ];
+/* ------------------------------------------------------------------
+   子图：某一篇正文自己的节点 + 它们的全部前置
+------------------------------------------------------------------ */
+export function postSlugOf(node: GraphNode): string | null {
+  const match = node.href?.match(/^\/posts\/([^/#]+)/);
+  return match ? match[1] : null;
+}
+
+export interface SubGraph {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+  /** 本篇自己讲的节点；其余是前置 */
+  own: Set<string>;
+}
+
+const parentsOf = (() => {
+  const map = new Map<string, string[]>();
+  for (const edge of EDGES) {
+    const list = map.get(edge.to) ?? [];
+    list.push(edge.from);
+    map.set(edge.to, list);
+  }
+  return map;
+})();
+
+export function subgraphFor(slug: string, depth = 2): SubGraph {
+  const own = new Set(
+    NODES.filter((node) => postSlugOf(node) === slug).map((node) => node.id),
+  );
+  if (own.size === 0) return { nodes: [], edges: [], own };
+
+  const keep = new Set(own);
+  let frontier = [...own];
+  for (let level = 0; level < depth; level++) {
+    const next: string[] = [];
+    for (const current of frontier) {
+      for (const parent of parentsOf.get(current) ?? []) {
+        if (!keep.has(parent)) {
+          keep.add(parent);
+          next.push(parent);
+        }
+      }
+    }
+    frontier = next;
+  }
+
+  return {
+    nodes: NODES.filter((node) => keep.has(node.id)),
+    edges: EDGES.filter((edge) => keep.has(edge.from) && keep.has(edge.to)),
+    own,
+  };
+}
+
+export function postsWithNodes(): string[] {
+  const set = new Set<string>();
+  for (const node of NODES) {
+    const slug = postSlugOf(node);
+    if (slug) set.add(slug);
+  }
+  return [...set];
+}
