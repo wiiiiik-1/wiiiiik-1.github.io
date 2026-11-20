@@ -34,7 +34,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 from matplotlib import font_manager  # noqa: E402
 from matplotlib.lines import Line2D  # noqa: E402
-from matplotlib.patches import FancyArrowPatch  # noqa: E402
+from matplotlib.patches import FancyArrowPatch, FancyBboxPatch, Rectangle  # noqa: E402
 
 # ---------------------------------------------------------------- 配色
 PAPER = "#f7f2e8"
@@ -672,6 +672,268 @@ def fig_tail_bounds(out_dir: Path) -> None:
     save(fig, out_dir, "tail-bounds.png")
 
 
+# ---------------------------------------------------------------- 图 15：4×3 网格世界
+GRID_W, GRID_H = 4, 3
+GRID_BLOCK = (2, 2)
+GRID_TERM = {(4, 3): 1.0, (4, 2): -1.0}
+GRID_STEP = -0.04
+MOVE = {"U": (0, 1), "D": (0, -1), "L": (-1, 0), "R": (1, 0)}
+
+
+def _grid_next(state, action):
+    """走一步；撞墙或撞障碍就留在原地，进终点就停下。"""
+    if state in GRID_TERM:
+        return state
+    nx = state[0] + MOVE[action][0]
+    ny = state[1] + MOVE[action][1]
+    if not (1 <= nx <= GRID_W and 1 <= ny <= GRID_H) or (nx, ny) == GRID_BLOCK:
+        return state
+    return (nx, ny)
+
+
+def _grid_value_iteration(gamma: float, eps: float = 1e-12, max_iter: int = 5000):
+    """值迭代：V_{k+1}(s) = max_a [ r(a,s) + γ V_k(s') ]。
+
+    γ=1 时这个问题仍有界（每步 −0.04、终点 +1，最优策略是恰当的），
+    而且会在个位数轮内把 V 算到机器精度。返回 (V, 策略, 每轮的最大变化量)。
+    """
+    states = [
+        (x, y)
+        for x in range(1, GRID_W + 1)
+        for y in range(1, GRID_H + 1)
+        if (x, y) != GRID_BLOCK and (x, y) not in GRID_TERM
+    ]
+    V = {s: 0.0 for s in states}
+    V.update(GRID_TERM)
+    history = []
+    for _ in range(max_iter):
+        new = dict(GRID_TERM)
+        delta = 0.0
+        for s in states:
+            new[s] = max(GRID_STEP + gamma * V[_grid_next(s, d)] for d in MOVE)
+            delta = max(delta, abs(new[s] - V[s]))
+        V = new
+        history.append(delta)
+        if delta < eps:
+            break
+    policy = {
+        s: max(MOVE, key=lambda d: GRID_STEP + gamma * V[_grid_next(s, d)]) for s in states
+    }
+    return V, policy, history
+
+
+def fig_gridworld(out_dir: Path) -> None:
+    """4×3 网格：V*(s) 与 π*(s)。
+
+    数值由值迭代算出（γ=1，每步 −0.04），正好复现讲义第 11 页那句
+    「[3,3] 该走 RIGHT」：0.96 比「先撞墙再绕」的 0.92 高 0.04。
+    """
+    V, policy, _ = _grid_value_iteration(1.0)
+    fig, ax = plt.subplots(figsize=(7.4, 4.3))
+
+    for x in range(1, GRID_W + 1):
+        for y in range(1, GRID_H + 1):
+            s = (x, y)
+            if s == GRID_BLOCK:
+                face, edge = "#cfc6b6", "#9a9285"
+            elif s in GRID_TERM:
+                face = "#d8e2d3" if GRID_TERM[s] > 0 else "#eed3cf"
+                edge = "#9a9285"
+            else:
+                face, edge = PAPER, "#8f8577"
+            ax.add_patch(
+                Rectangle((x - 1, y - 1), 1, 1, facecolor=face, edgecolor=edge, lw=1.2)
+            )
+            if s == GRID_BLOCK:
+                ax.text(x - 0.5, y - 0.5, t("障碍", "block"), ha="center", va="center",
+                        fontsize=10.5, color="#6f675c")
+                continue
+            if s in GRID_TERM:
+                ax.text(x - 0.5, y - 0.42, ("+1" if GRID_TERM[s] > 0 else "−1"),
+                        ha="center", va="center", fontsize=19, color=INK)
+                ax.text(x - 0.5, y - 0.72, t("终点", "terminal"), ha="center", va="center",
+                        fontsize=8.5, color="#5a544a")
+                continue
+
+            ax.text(x - 0.5, y - 0.27, f"{V[s]:.2f}", ha="center", va="center",
+                    fontsize=12.5, color=INK)
+            dx, dy = MOVE[policy[s]]
+            cx, cy = x - 0.5, y - 0.68
+            ax.add_patch(
+                FancyArrowPatch(
+                    (cx - 0.16 * dx, cy - 0.16 * dy), (cx + 0.16 * dx, cy + 0.16 * dy),
+                    arrowstyle="-|>", mutation_scale=13, color=VERM, lw=1.8,
+                )
+            )
+
+    ax.text(0.10, 0.10, t("起点", "start"), ha="left", va="bottom", fontsize=9,
+            color="#5a544a")
+    ax.set_xlim(0, GRID_W)
+    ax.set_ylim(0, GRID_H)
+    ax.set_aspect("equal")
+    ax.set_xticks([i + 0.5 for i in range(GRID_W)])
+    ax.set_xticklabels([str(i + 1) for i in range(GRID_W)])
+    ax.set_yticks([i + 0.5 for i in range(GRID_H)])
+    ax.set_yticklabels([str(i + 1) for i in range(GRID_H)])
+    ax.set_xlabel(t("列 x", "column x"))
+    ax.set_ylabel(t("行 y", "row y"))
+    ax.grid(False)
+    ax.set_title(t(r"4×3 网格：值迭代求出的 $V^*(s)$ 与 $\pi^*(s)$（$\gamma=1$，每步 $-0.04$）",
+                   r"4x3 grid: $V^*(s)$ and $\pi^*(s)$ (gamma=1, step -0.04)"))
+    fig.text(
+        0.5, 0.005,
+        t(r"手算校验：$V^*(3,3)=-0.04+1=0.96$（RIGHT）；走 UP 撞墙则是 $-0.04+0.96=0.92$",
+          r"check: V(3,3) = -0.04 + 1 = 0.96 (RIGHT); UP bumps into the wall -> 0.92"),
+        ha="center", fontsize=9.5, color="#5a544a",
+    )
+    save(fig, out_dir, "gridworld.png")
+
+
+# ---------------------------------------------------------------- 图 16：折扣在做什么
+def fig_discount(out_dir: Path) -> None:
+    """两件事放在一起：γ^t 的衰减（有效视野）与起点价值的 γ 依赖。"""
+    fig, axes = plt.subplots(1, 2, figsize=(8.8, 3.6))
+    ax = axes[0]
+    ts = np.arange(0, 61)
+    for gamma, color in ((0.5, GREEN), (0.9, BLUE), (0.98, VERM)):
+        ax.plot(ts, gamma ** ts, color=color, lw=2.0)
+        ax.axvline(1 / (1 - gamma), color=color, ls=(0, (3, 3)), lw=0.9, alpha=0.7)
+        ax.text(1 / (1 - gamma) + 0.8, 0.06, rf"$\gamma={gamma}$", fontsize=9.5,
+                color=color, ha="left" if gamma > 0.5 else "right")
+    ax.set_xlabel(t("步数 t", "step t"))
+    ax.set_ylabel(r"$\gamma^t$")
+    ax.set_title(t(r"越远的奖励权重越小：有效视野 $\approx 1/(1-\gamma)$",
+                   r"weights decay: horizon ~ 1/(1-gamma)"), fontsize=10.5)
+    ax.annotate(t(r"$\gamma=0.9$：10 步后只剩 $0.35$", r"gamma=0.9: 0.35 left at t=10"),
+                xy=(10, 0.35), xytext=(19, 0.86), fontsize=9, color=BLUE,
+                arrowprops=dict(arrowstyle="->", color=BLUE, lw=1.0,
+                                connectionstyle="arc3,rad=0.15"))
+    ax.set_ylim(0, 1.05)
+    ax.grid(True)
+
+    gammas = np.linspace(0.0, 0.99, 100)
+    start_values = [_grid_value_iteration(g)[0][(1, 1)] for g in gammas]
+    ax = axes[1]
+    ax.plot(gammas, start_values, color=INK, lw=2.0)
+    ax.axhline(0, color="#9a9285", lw=0.9)
+    for g, color in ((0.5, GREEN), (0.9, BLUE), (0.99, VERM)):
+        v = _grid_value_iteration(g)[0][(1, 1)]
+        ax.scatter([g], [v], color=color, s=34, zorder=4)
+        ax.annotate(rf"$\gamma={g}$: {v:.3f}", xy=(g, v),
+                    xytext=(g - 0.46, v + 0.10 if g < 0.95 else v - 0.16),
+                    fontsize=8.5, color=color)
+    ax.set_xlabel(r"$\gamma$")
+    ax.set_ylabel(t(r"起点 $(1,1)$ 的 $V^*$", r"$V^*$ at start $(1,1)$"))
+    ax.set_title(t("折扣把「很远才拿到的 +1」压小", "discount shrinks far-away reward"),
+                 fontsize=10.5)
+    ax.set_xlim(0, 1.0)
+    ax.set_ylim(-0.12, 0.92)
+    ax.grid(True)
+    save(fig, out_dir, "discount.png")
+
+
+# ---------------------------------------------------------------- 图 17：agent–环境回路
+def _box(ax, x, y, w, h, label, fc=PAPER, fs=11.5):
+    ax.add_patch(
+        FancyBboxPatch(
+            (x - w / 2, y - h / 2), w, h,
+            boxstyle="round,pad=0.02,rounding_size=0.10",
+            facecolor=fc, edgecolor=INK, lw=1.5,
+        )
+    )
+    ax.text(x, y, label, ha="center", va="center", fontsize=fs, color=INK)
+
+
+def fig_rl_loop(out_dir: Path) -> None:
+    """左右对照：bandit 的回路里没有「状态」这根线，RL 有。"""
+    fig, axes = plt.subplots(1, 2, figsize=(8.6, 3.5))
+    for ax, title in zip(axes, (t("多臂老虎机：一个状态", "bandit: a single state"),
+                                t("强化学习：动作改变状态", "RL: actions change the state"))):
+        ax.set_xlim(0, 1)
+        ax.set_ylim(0, 1)
+        ax.axis("off")
+        ax.set_title(title, fontsize=11, pad=6)
+
+    # 左：agent / environment，只有 action 与 reward 两根线
+    ax = axes[0]
+    _box(ax, 0.5, 0.74, 0.58, 0.18, "Agent")
+    _box(ax, 0.5, 0.26, 0.62, 0.20, t("环境（唯一状态 s）", "environment (one state s)"))
+    ax.add_patch(FancyArrowPatch((0.76, 0.65), (0.76, 0.36), arrowstyle="-|>",
+                                 mutation_scale=12, color=BLUE, lw=1.6))
+    ax.text(0.79, 0.505, r"$a(t)$", fontsize=11, color=BLUE)
+    ax.add_patch(FancyArrowPatch((0.38, 0.36), (0.38, 0.65), arrowstyle="-|>",
+                                 mutation_scale=12, color=VERM, lw=1.6))
+    ax.text(0.35, 0.505, r"$r(a,s)$", fontsize=11, color=VERM, ha="right")
+    ax.text(0.5, 0.05, t(r"$s(t+1)\equiv s(t)$：奖励分布不动", r"$s(t+1)=s(t)$: distributions fixed"),
+            ha="center", fontsize=9.5, color="#5a544a")
+
+    # 右：多出 state 与 next-state 两根线
+    ax = axes[1]
+    _box(ax, 0.5, 0.74, 0.58, 0.18, "Agent")
+    _box(ax, 0.5, 0.26, 0.62, 0.20, t("环境", "environment"))
+    ax.add_patch(FancyArrowPatch((0.76, 0.65), (0.76, 0.36), arrowstyle="-|>",
+                                 mutation_scale=12, color=BLUE, lw=1.6))
+    ax.text(0.79, 0.505, r"$a(t)$", fontsize=11, color=BLUE)
+    ax.add_patch(FancyArrowPatch((0.22, 0.36), (0.22, 0.65), arrowstyle="-|>",
+                                 mutation_scale=12, color=GREEN, lw=1.6))
+    ax.text(0.19, 0.505, r"$s(t)$", fontsize=11, color=GREEN, ha="right")
+    ax.add_patch(FancyArrowPatch((0.44, 0.36), (0.44, 0.65), arrowstyle="-|>",
+                                 mutation_scale=12, color=VERM, lw=1.6))
+    ax.text(0.47, 0.505, r"$r$", fontsize=11, color=VERM, ha="left")
+    ax.text(0.5, 0.05, t(r"$s(t+1)\sim\sigma(a(t),s(t))$：奖励随状态走",
+                         r"$s(t+1) \sim \sigma(a(t), s(t))$"),
+            ha="center", fontsize=9.5, color="#5a544a")
+    save(fig, out_dir, "rl-loop.png")
+
+
+# ---------------------------------------------------------------- 图 18：V 与 Q 的一步展开
+def fig_backup(out_dir: Path) -> None:
+    """把 V^π 展开一层：策略给动作、转移给下一状态，中间那层就是 Q^π。"""
+    fig, ax = plt.subplots(figsize=(8.2, 3.9))
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+    ax.axis("off")
+
+    def node(x, y, label, color=INK, r=0.055):
+        ax.add_patch(plt.Circle((x, y), r, facecolor=PAPER, edgecolor=color, lw=1.5, zorder=3))
+        ax.text(x, y, label, ha="center", va="center", fontsize=10.5, color=color, zorder=4)
+
+    def link(x0, y0, x1, y1, color="#8f8577", label=None, lx=0.0, ly=0.0):
+        ax.add_patch(FancyArrowPatch((x0, y0), (x1, y1), arrowstyle="-|>", mutation_scale=10,
+                                     color=color, lw=1.2, zorder=2, shrinkA=6, shrinkB=6))
+        if label:
+            ax.text((x0 + x1) / 2 + lx, (y0 + y1) / 2 + ly, label, fontsize=9.5,
+                    color=color, ha="center")
+
+    node(0.5, 0.88, r"$V^\pi(s)$")
+    node(0.28, 0.62, r"$a$", BLUE)
+    node(0.72, 0.62, r"$a'$", BLUE)
+    link(0.5, 0.88, 0.28, 0.62, BLUE, r"$\pi(a\mid s)$", -0.11, 0.0)
+    link(0.5, 0.88, 0.72, 0.62, BLUE, r"$\pi(a'\mid s)$", 0.11, 0.0)
+
+    leaves = [
+        (0.10, 0.34, 0.28, 0.62, r"$s_1'$"),
+        (0.30, 0.34, 0.28, 0.62, r"$s_2'$"),
+        (0.70, 0.34, 0.72, 0.62, r"$s_1'$"),
+        (0.90, 0.34, 0.72, 0.62, r"$s_2'$"),
+    ]
+    for i, (x, y, px, py, label) in enumerate(leaves):
+        node(x, y, label, GREEN)
+        link(px, py, x, y, GREEN, r"$p(s'\mid s,a)$" if i % 2 == 0 else None, -0.075, 0.02)
+        ax.text(x, y - 0.10, r"$r+\gamma V^\pi(s')$", fontsize=8.6, color="#5a544a",
+                ha="center")
+
+    # 中间那层 = Q
+    ax.text(0.02, 0.985, t("蓝色这一层就是 $Q^\\pi(a,s)$；再按 $\\pi(a\\mid s)$ 平均，回到 $V^\\pi(s)$",
+                           "blue layer = $Q^\\pi(a,s)$; averaging over $\\pi$ gives $V^\\pi(s)$"),
+            ha="left", va="top", fontsize=9.5, color=VERM)
+    ax.text(0.5, 0.10,
+            t(r"$V^\pi(s)=\sum_a \pi(a\mid s)\,Q^\pi(a,s)$；$Q^\pi(a,s)=r(a,s)+\gamma\sum_{s'}p(s'\mid s,a)V^\pi(s')$",
+              r"$V^\pi(s)=\sum_a \pi(a\mid s) Q^\pi(a,s)$;  $Q = r + \gamma\sum p V$"),
+            ha="center", fontsize=9.2, color=INK)
+    save(fig, out_dir, "backup.png")
+
+
 # slug -> (函数, 说明)
 FIGURES = {
     "arms": (fig_arms, "臂的奖励分布与次优间隙"),
@@ -688,6 +950,10 @@ FIGURES = {
     "posterior-shrink": (fig_posterior_shrink, "后验随采样次数收缩"),
     "regret-over-logn": (fig_regret_over_logn, "R_n/ln n 的收敛速度"),
     "tail-bounds": (fig_tail_bounds, "Chebyshev / Hoeffding / 真实尾概率的对数对比"),
+    "gridworld": (fig_gridworld, "4×3 网格的 V* 与 π*"),
+    "discount": (fig_discount, "折扣：γ^t 衰减与起点价值的 γ 依赖"),
+    "rl-loop": (fig_rl_loop, "bandit 与 RL 的 agent–环境回路对照"),
+    "backup": (fig_backup, "V 与 Q 的一步展开（backup diagram）"),
 }
 
 

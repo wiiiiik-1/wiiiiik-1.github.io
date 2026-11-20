@@ -1,14 +1,14 @@
 # 博客内容地图（给后续会话）
 
-> **用途**：让新的会话不必先读完 5 篇、约 10 万字符，就能知道这里**有什么、怎么写的、还能补什么**。
-> **最后更新**：2026-11-13（前置三章 + 知识拓扑页 `/map/` + 每篇正文的局部子图；CI 改用 `npm ci`）
+> **用途**：让新的会话不必先读完 9 篇、约 17 万字符，就能知道这里**有什么、怎么写的、还能补什么**。
+> **最后更新**：2026-11-20（新增第 5 篇强化学习 + 4 张图解 + 附录 E7；导论加「第四层」并重编章节号）
 > **状态**：本地 = 远端 = 已部署，CI 全绿。
 
 ---
 
 ## 0. 一句话现状
 
-一个 Ink & Paper 风格的数学笔记站。主体是**一个四篇的 bandits 系列**（假设检验 → 多臂老虎机 → ETC/UCB → Thompson Sampling）+ 一篇导论，前面再补**三篇前置章节**（数学工具箱 → 概率论基础 → 数理统计基础），外加一个把八篇拆成 45 个知识点、75 条依赖边的**知识拓扑页 `/map/`**。示意图由脚本生成、可复现；每篇末尾附手写讲义原页扫描。
+一个 Ink & Paper 风格的数学笔记站。主体是**一个五篇的系列**（假设检验 → 多臂老虎机 → ETC/UCB → Thompson Sampling → 强化学习/MDP）+ 一篇导论，前面再补**三篇前置章节**（数学工具箱 → 概率论基础 → 数理统计基础），外加一个把九篇拆成 54 个知识点、89 条依赖边的**知识拓扑页 `/map/`**。示意图由脚本生成、可复现；每篇末尾附手写讲义原页扫描。
 
 ---
 
@@ -31,18 +31,19 @@
 
 | 文件 | 标题 | 日期 | 行数 | 字符 | 首页大卡 | 手稿页 | 图解 |
 |---|---|---|---|---|---|---|---|
-| `math-toolbox.md` | 数学工具箱：写概率推导之前该备好的六件事 | 2026-11-01 | 340 | 9.0k | – | – | 1（复用） |
-| `probability-foundations.md` | 概率论基础：从公理到中心极限定理 | 2026-11-02 | 330 | 10.4k | – | – | 0 |
-| `statistics-foundations.md` | 数理统计基础：估计、区间与检验 | 2026-11-03 | 400 | 10.3k | – | – | 0 |
-| `proof-appendix.md` | 附录：公式与证明索引 | 2026-11-04 | 430 | 19.5k | – | – | 0 |
-| `bandits-series-intro.md` | 系列导论：从一道暴雨预警，到假设检验与多臂老虎机 | 2026-11-06 | 384 | 9.4k | ✅ | – | 1 |
-| `hypothesis-testing-and-estimation.md` | 假设检验与参数估计：两份讲义的中英对照精读笔记 | 2026-10-23 | 1597 | 36.7k | ✅ | 3 图 | 0 |
-| `multi-armed-bandits-intro.md` | 多臂老虎机入门：从 Regret 到 Explore-Then-Commit | 2026-10-30 | 610 | 16.8k | – | 10 页 | 2 |
-| `from-etc-to-ucb.md` | 从 ETC 到 UCB：遗憾分析、置信上界与 O(log n) | 2026-11-06 | 699 | 17.9k | – | 13 页 | 4 |
-| `thompson-sampling.md` | 从 UCB 到 Thompson Sampling：贝叶斯学习、随机化与渐进最优 | 2026-11-13 | 656 | 21.0k | – | 14 页 | 7 |
+| `math-toolbox.md` | 数学工具箱：写概率推导之前该备好的六件事 | 2026-11-01 | 418 | 13.5k | – | – | 1（复用） |
+| `probability-foundations.md` | 概率论基础：从公理到中心极限定理 | 2026-11-02 | 334 | 10.1k | – | – | 0 |
+| `statistics-foundations.md` | 数理统计基础：估计、区间与检验 | 2026-11-03 | 339 | 10.0k | – | – | 0 |
+| `proof-appendix.md` | 附录：公式与证明索引 | 2026-11-04 | 407 | 15.1k | – | – | 0 |
+| `bandits-series-intro.md` | 系列导论：从一道暴雨预警，到假设检验与多臂老虎机 | 2026-11-06 | 439 | 11.7k | ✅ | – | 2 |
+| `hypothesis-testing-and-estimation.md` | 假设检验与参数估计：两份讲义的中英对照精读笔记 | 2026-10-23 | 1599 | 35.2k | ✅ | 3 图 | 0 |
+| `multi-armed-bandits-intro.md` | 多臂老虎机入门：从 Regret 到 Explore-Then-Commit | 2026-10-30 | 612 | 16.9k | – | 10 页 | 2 |
+| `from-etc-to-ucb.md` | 从 ETC 到 UCB：遗憾分析、置信上界与 O(log n) | 2026-11-06 | 701 | 18.1k | – | 13 页 | 4 |
+| `thompson-sampling.md` | 从 UCB 到 Thompson Sampling：贝叶斯学习、随机化与渐进最优 | 2026-11-13 | 658 | 21.2k | – | 14 页 | 7 |
+| `reinforcement-learning.md` | 从多臂老虎机到强化学习：状态、MDP 与价值函数 | 2026-11-20 | 749 | 23.2k | – | 24 页 | 4 |
 
-图片资产：`public/images/` 下共 **5 个目录、约 10.4 MB**
-（`bandit-figures` 1.4 MB / 14 张 + `.keep`，`hypothesis-testing-and-estimation` 1.0 MB / 3 张，`multi-armed-bandits-intro` 2.2 MB / 11 张，`from-etc-to-ucb` 3.0 MB / 14 张，`thompson-sampling` 2.9 MB / 14 张）。
+图片资产：`public/images/` 下共 **6 个目录、约 13.6 MB**
+（`bandit-figures` 1.8 MB / 18 张 + `.keep`，`hypothesis-testing-and-estimation` 1.0 MB / 3 张，`multi-armed-bandits-intro` 2.2 MB / 10 张，`from-etc-to-ucb` 2.9 MB / 13 张，`thompson-sampling` 2.8 MB / 14 张，`reinforcement-learning` 2.9 MB / 24 张）。
 
 ---
 
@@ -118,6 +119,22 @@
 
 ---
 
+### 3.6 第 5 篇 `reinforcement-learning`（2026-11-20 新增）
+
+**定位**：系列的转向处。前四篇的奖励分布**不随决策改变**；这一篇拆掉这条假设，把「状态」加回来，于是最优解从「哪条臂」变成「一张状态到动作的表」。24 页讲义只搭语言（状态/动作/转移/策略/MDP/V/Q/Bellman），**没有算法**，结尾是 to be continued。
+
+**骨架**：`0 二十四页在做什么` → `1 只差一个状态`（在线学习三例、bandit 回顾、RL 定义、bandit 是单状态特例、应用清单）→ `2 四个对象与一个策略` → `3 目标与折扣`（两个目标函数、$\Sigma\gamma^t=1/(1-\gamma)$、有效视野）→ `4 4×3 网格手算`（$[3,3]$ 为什么 RIGHT、整张 $V^*$ 表）→ `5 四个难点` → `6 马尔可夫性`（定义、为什么要它、转移矩阵、一步/两步分布）→ `7 MRP 与状态值函数`（Bellman 展开、两状态例子 $6.90/6.21$、$\gamma=1$ 无解）→ `8 MDP`（$p^a$、$V^\pi$、Bellman 期望方程）→ `9 Q 函数`（$V$/$Q$ 关系、网格上的 $Q^*$ 表、backup 图）→ `10 贪心化`（$V^*=\max_aQ^*$、为什么循环、Bellman 最优方程、确定最优策略）→ `11 规划 vs 学习`（值迭代、$\gamma$-压缩、下一讲预告）→ `12 和前面四篇的接口` → `13 公式速查` → `14 术语` → `15 六个坑` → `16 一页纸记忆版` → `17 手稿原页`（24 张）
+
+**关键公式**：$R(\infty)=\sum_t\gamma^t\mathbb E[r(a_t,s_t)]$；$V(s)=r(s)+\gamma\sum pV$；$V=(I-\gamma P)^{-1}r$；$V^\pi(s)=\sum_a\pi(a\mid s)Q^\pi(a,s)$；$Q^\pi(a,s)=r(a,s)+\gamma\sum p^aV^\pi$；$Q^*(a,s)=r(a,s)+\gamma\sum p^a\max_{a'}Q^*(a',s')$。
+
+**图**：`rl-loop.png`（§1.2）、`discount.png`（§3.2）、`gridworld.png`（§4.3）、`backup.png`（§9）。
+
+**两处容易写错的地方**（已经踩过并改对）：
+- 网格图的数值必须**现算**：`_grid_value_iteration()` 在 `make-figures.py` 里，$\gamma=1$ 时 6 轮收敛到机器精度，$[3,3]=0.96$、$[1,1]=0.80$——正文里的手算与它对得上，改参数要一起改；
+- 「贪心化 $Q^*$ 得到 $\pi^*$」是**自洽条件不是算法**，正文用「补」块明确说了这一点，别在后续文章里说成「一个算法」。
+
+---
+
 ## 4. 写作约定（改文前必读）
 
 1. **公式只用 `$...$` 与 `$$...$$`**。`\(...\)` / `\[...\]` 会原样漏成纯文本（2026-10-24 踩过一次，全文 384 处）。
@@ -132,21 +149,24 @@
 
 ## 4.5 证明附录
 
-`proof-appendix.md` 把「正文只留结论、推导集中归档」做实：A 分析工具（4 条）、B 概率不等式（10 条）、C 期望与方差（4 条）、D 数理统计（8 条）、E 序贯决策（6 条），F 节列出**不证的结论与理由**（CLT、Berry–Esseen、Lai–Robbins、Azuma、GLM 渐近）。
+`proof-appendix.md` 把「正文只留结论、推导集中归档」做实：A 分析工具（4 条）、B 概率不等式（10 条）、C 期望与方差（4 条）、D 数理统计（8 条）、E 序贯决策（7 条，E7 是 2026-11-20 为第 5 篇加的值迭代 $\gamma$-压缩），F 节列出**不证的结论与理由**（CLT、Berry–Esseen、Lai–Robbins、Azuma、GLM 渐近）。
 
 每条固定四段：条件 / 结论 / 证明 / 用在哪。正文里凡是「引用不证」的结论都要链到这里；附录每条也要标出它在哪一节被用到。
+
+**新增条目时**：编号顺延（E8…），标题里不要放公式——KaTeX 会改写标题，锚点跟着变。第 5 篇引的那条锚点实测是 `#e7-值迭代的收敛性γ-压缩`。
 
 **锚点提醒**：KaTeX 会改写含公式的标题，实际 id 往往不是手算的那个（如 `43-定量tiδi216logn`、`22-χ2tf`）。写链接前先 build，再从 `dist` 里抄 id；CI 的 `check-anchors.mjs` 会挡住坏链接。
 
 ## 5. 图解系统
 
-- 生成脚本：`scripts/figures/make-figures.py`（13 张，Ink & Paper 配色，固定随机种子）
+- 生成脚本：`scripts/figures/make-figures.py`（18 张，Ink & Paper 配色，固定随机种子）
 - 逐图说明：`scripts/figures/README.md`（slug → 文件 → 用在哪一节 → 想说明什么）
-- 输出：`public/images/bandit-figures/`
+- 输出：`public/images/bandit-figures/`（整套系列共用的图仓，第 5 篇的四张也在里面）
 - 参数：`--only <slug>`、`--out <dir>`、`--lang en`、`--trials`、`--seed`
 - 依赖：`scripts/figures/requirements.txt`（matplotlib + numpy）；中文标注缺字体时自动退回英文
 - **改图流程**：`--out .figs` 先出草稿 → 用 `read_image` 目视核对 → 确认后复制进 `public/images/bandit-figures/`（这一步需要 `danger-full-access`，沙箱默认禁止写 `public/`）→ 重跑一次做逐像素比对
 - 数值实验脚本：`scripts/sim/etc-worked-example.py`（12.8% / 4.05）、`scripts/sim/bandit-sim.py`（三场景）
+- **第 5 篇的四张图**：`rl-loop` / `gridworld` / `discount` / `backup`。前两张是示意图（画框、箭头），后两张是算出来的——`_grid_value_iteration()` 与 `fig_discount` 里的值迭代都是现算的，网格世界的参数（障碍、终点、$-0.04$）写在文件顶部常量里，**改一处就要改正文的手算数字**。
 
 > 注意：图里的结论都经过实测核对，**不要凭印象改注释里的数字**。第 4 篇有两次是「先写结论、再跑仿真，结果仿真不同意」——最后改的是文字，不是数据。
 
@@ -161,6 +181,7 @@
 | 站内链接是否全可达 | `node scripts/check-anchors.mjs dist`（**已接进 CI**，build 后跑；坏一条就 red） |
 | 本地无法用 `web_fetch` | 本站域名解析到 198.18.x（TUN 假 IP），一律用 `node` 的 `fetch` 走 `work/*.mjs` |
 | 本地构建 | `node node_modules/astro/astro.js build`（没有 `.bin`，要走这个入口）。沙箱下会 `spawn EPERM`（Vite 的 realpath 优化），需要一次 `danger-full-access`；同理 `npm install` 也要提权 |
+| 构建后少了几篇 | **先删 `node_modules/.astro/data-store.json`**（Astro 内容层缓存）。2026-11-20 就撞过一次：画面显示 8 篇、缓存文件停在 11-13，删掉重建立刻恢复 10 篇。CI 每次 `npm ci` 是全新的，不会遇到 |
 | 锚点校验 | build 后逐条比对 `src/data/knowledge-graph.ts` 里的 `href` 与 `dist` 里的 `id` |
 
 ---
@@ -168,18 +189,20 @@
 ## 7. 已知缺口 / 可补充的方向
 
 **内容**
-1. **Lecture 6 及以后**尚未出现，系列可继续往后接（TS 之后通常是 Lai–Robbins 下界的完整证明、UCB-V / KL-UCB、非平稳 bandit）。
-2. **下界只有一句话**：第 4 篇 §5.5 用 KL 视角解释了常数 2，但**没有证明** Lai–Robbins。若要补，最自然的位置是第 4 篇 §5 末尾加一节，或单独成第 5 篇。
+1. **Lecture 7 及以后尚未出现**：第 5 篇停在 Bellman 方程（讲义原话 to be continued），最自然的续篇是「用采样替掉求和」——Q-learning / TD / policy gradient；再往后是非平稳 bandit、Lai–Robbins 完整证明、KL-UCB。
+2. **下界只有一句话**：第 4 篇 §5.5 用 KL 视角解释了常数 2，但**没有证明** Lai–Robbins。若要补，最自然的位置是第 4 篇 §5 末尾加一节，或单独成一篇。
 3. **第 1 篇（假设检验）与 bandits 的连接偏薄**：只在导论第 2 节和该篇第 4 节各提了一次「同一条贝叶斯模板」。可以把导论里那个「四格表 → regret」的桥写实一点。
 4. **没有「系列页」**：目前靠导论当 hub。若篇目继续增加，值得加一个 `/series/` 页面或在 `/posts/` 顶部分组。
-5. **站内没有搜索**；标签页是自动生成的，但标签体系没有统一（`多臂老虎机` 出现在 4 篇，`Regret` 出现在 3 篇）。
+5. **站内没有搜索**；标签页是自动生成的，但标签体系没有统一（`多臂老虎机` 出现在 4 篇，`Regret` 出现在 3 篇，第 5 篇新加了 `强化学习` / `MDP`）。
+6. **第 5 篇没有一节讲「部分可观测」**：只在 §6.2 的补块里提了一句 POMDP，因为讲义本身停在 MDP。若后续讲 POMDP 或 belief state，可以从这里接。
 
 **工程**
-6. **手稿页体积偏大**：每篇 2–3 MB 的 JPEG。若要优化，可换 WebP（视觉无损，约省 40%）或加 `loading="lazy"`。
-7. **`work/` 是 scratch（已 gitignore）**：里面的 `check-*.mjs`、`pdf-render.py` 等没入库。若想让别人复现「PDF → 笔记」的流程，可挑几个整理进 `scripts/`。
-8. **`refs/` 是本地参考资料（已 gitignore）**：目前有一本 DeGroot《Probability and Statistics》（911 页，含文本层）。前置三章已按它 Ch.1–9 的框架组织；后续若写贝叶斯或回归，可以直接从 Ch.7–9、Ch.11 取材料。
-9. **拓扑页的节点数是手写的**：导论 §6 里写死「45 个知识点」，改 `src/data/knowledge-graph.ts` 的 `NODES` 后要同步这一句（`/map/` 页本身用的是 `NODES.length`，不会错）。
-10. **每篇开头没有「本节的拓扑位置」小图**：目前只有导论、以及五篇系列正文顶部的一行「在拓扑中的位置」。若想每篇都有一张局部子图，可以在 `knowledge-graph.ts` 里给节点加 `post` 字段再按篇滤一遍。
+7. **手稿页体积偏大**：每篇 2–3 MB 的 JPEG（第 5 篇 24 页 2.9 MB）。若要优化，可换 WebP（视觉无损，约省 40%）或加 `loading="lazy"`。
+8. **`work/` 是 scratch（已 gitignore）**：里面的 `check-*.mjs`、`pdf-render.py` 等没入库。若想让别人复现「PDF → 笔记」的流程，可挑几个整理进 `scripts/`。
+9. **`refs/` 是本地参考资料（已 gitignore）**：目前有一本 DeGroot《Probability and Statistics》（911 页，含文本层）。前置三章已按它 Ch.1–9 的框架组织；后续若写贝叶斯或回归，可以直接从 Ch.7–9、Ch.11 取材料。
+10. **拓扑页的节点数是手写的**：导论 §7 里写死「54 个知识点」，改 `src/data/knowledge-graph.ts` 的 `NODES` 后要同步这一句（`/map/` 页本身用的是 `NODES.length`，不会错）。
+11. **每篇开头没有「本节的拓扑位置」小图**：目前只有导论、以及五篇系列正文顶部的一行「在拓扑中的位置」。若想每篇都有一张局部子图，可以在 `knowledge-graph.ts` 里给节点加 `post` 字段再按篇滤一遍。
+12. **`pypdfium2` 只在 `.pylibs` 里**（cp312 轮子，Python 3.14 不能用），系统里的 matplotlib 3.11.2 是好的。渲染手稿页要写一个 **临时脚本放到 `.tmp/`** 再跑：`work/` 里的 `inspect.py` 会遮蔽标准库，直接 `python work/pdf-render.py` 会 `AttributeError: module 'inspect' has no attribute 'signature'`。
 
 ---
 
@@ -190,8 +213,9 @@
 2. 图片放 `public/images/<slug>/`；
 3. 开头写「材料 / 和上一篇的关系 / 符号 / 系列位置」四行引用块；
 4. 结尾补五件套；
-5. **回来改导论**：描述、入口段、第 6 节的地图与篇目表、第 8 节的阅读路线；
-6. 若在系列中间插入，改前后两篇的「系列位置」。
+5. **回来改导论**：描述、入口段、第 7 节的地图与篇目表、第 9 节的阅读路线；**若插入新的一层，还要给后面所有节号 +1**（2026-11-20 加「第四层」时就是 5→6 … 8→9，顺带把 `knowledge-graph.ts` 里指向导论的 `#71-` / `#72-` 改成 `#81-` / `#82-`）；
+6. 若在系列中间插入，改前后两篇的「系列位置」；
+7. 若这一篇要单独出现在 `/map/`：往 `NODES` 加节点、往 `CHAPTERS` 加一章；导论的 `ReadingRoute` 按 `CHAPTERS.slice(3, 7)` / `slice(7)` 分带，**第 6 篇要重算 `1080×560` 的坐标和第三带**（`src/components/ReadingRoute.astro` 顶部注释里有说明）。
 
 **加一张图解**
 1. 在 `scripts/figures/make-figures.py` 加函数 → 注册进 `FIGURES`；
@@ -207,7 +231,7 @@
 4. 改完 build 一次，跑一遍「锚点全量校验」（读 `dist` 里的 html，逐个 `href` 查 `id="…"` 是否存在）。
 5. **节点的「归属篇目」由 `href` 决定**：`postSlugOf()` 从 `href` 里取 `/posts/<slug>/`，`subgraphFor()` 再把该篇节点与 1–2 级前置一起取出。所以把某个节点的 `href` 从一个章节挪到另一个章节，会同时改变它出现在哪一篇的子图里（`bigo`、`tail`、`kl` 就是这样从导论/第 4 篇挪到数学工具箱的）。
 6. **每篇正文的子图是自动的**：`PostLayout` 末尾渲染 `<KnowledgeMap post={post.id} compact />`，先取 2 级前置，节点超过 18 个就退回 1 级。朱砂色填充的是「本篇直接讲」的节点。**新增一篇带节点的文章不需要改 PostLayout**，往 `NODES` 加节点即可。
-7. **导论是例外**：它在 `PostLayout` 里被写死成 `post.id === "bandits-series-intro"` 时渲染 `<ReadingRoute />`（`src/components/ReadingRoute.astro`）——一张「八篇怎么走」的路线图：上面是前置线（数学/概率/统计），下面是主线（第 1–4 篇），中间一根回车线把「统计读完」接到「第 1 篇」。坐标按 `CHAPTERS` 的 slice 手算在 `1080×380` 的 viewBox 里，**增删篇目要重算 x 与 viewBox 宽度**。
+7. **导论是例外**：它在 `PostLayout` 里被写死成 `post.id === "bandits-series-intro"` 时渲染 `<ReadingRoute />`（`src/components/ReadingRoute.astro`）——一张「九篇怎么走」的路线图，**三条带**：上面是前置线（数学/概率/统计），中间是主线（第 1–4 篇），最下面是被主线带出来的第 5 篇；两根竖/回车线分别是「统计读完 → 第 1 篇」和「第 4 篇 → 第 5 篇」。坐标按 `CHAPTERS` 的 `slice(0,3)` / `slice(3,7)` / `slice(7)` 手算在 `1080×560` 的 viewBox 里，**增删篇目要重算 x 与 viewBox 高度**。
 
 **改公式/文字**
 - 只动 `.md`，push 即可；CI 会自动重建。

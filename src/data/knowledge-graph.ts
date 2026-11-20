@@ -1,4 +1,4 @@
-export type Track = "math" | "prob" | "stat" | "bandit";
+export type Track = "math" | "prob" | "stat" | "bandit" | "rl";
 
 export interface GraphNode {
   id: string;
@@ -6,7 +6,7 @@ export interface GraphNode {
   /** 第二行小字，通常是公式或英文原词 */
   sub?: string;
   track: Track;
-  /** 横轴分层：0 数学工具 → 9 渐近最优 */
+  /** 横轴分层：0 数学工具 → 12 值函数与 Bellman */
   stage: number;
   /** 点击跳转的地址；没有则只在图里出现 */
   href?: string;
@@ -28,6 +28,7 @@ export const TRACKS: { id: Track; name: string; desc: string }[] = [
   { id: "prob", name: "概率论", desc: "公理、条件概率、随机变量、期望、极限定理" },
   { id: "stat", name: "数理统计", desc: "似然、估计、区间、检验、后验" },
   { id: "bandit", name: "序贯决策", desc: "regret、ETC、UCB、Thompson" },
+  { id: "rl", name: "强化学习", desc: "状态、MDP、值函数、Bellman" },
 ];
 
 export const STAGES: { stage: number; name: string }[] = [
@@ -41,10 +42,13 @@ export const STAGES: { stage: number; name: string }[] = [
   { stage: 7, name: "序列决策" },
   { stage: 8, name: "ETC / UCB" },
   { stage: 9, name: "Thompson / 下界" },
+  { stage: 10, name: "状态与动作" },
+  { stage: 11, name: "转移与 MDP" },
+  { stage: 12, name: "值函数与 Bellman" },
 ];
 
 /* ------------------------------------------------------------------
-   节点：45 个知识点
+   节点：54 个知识点
    stage 只表示「大致在哪一列」，不表示强制的先后
 ------------------------------------------------------------------ */
 export const NODES: GraphNode[] = [
@@ -84,13 +88,13 @@ export const NODES: GraphNode[] = [
 
   // ---------- stage 3：期望与条件 ----------
   { id: "expect", label: "期望与线性性", sub: "E[ΣXᵢ] = ΣE[Xᵢ]", track: "prob", stage: 3,
-    href: "/posts/bandits-series-intro/#71-期望与全期望", note: "regret 的期望可以逐项拆开，靠的是线性性，不是独立性。" },
+    href: "/posts/bandits-series-intro/#81-期望与全期望", note: "regret 的期望可以逐项拆开，靠的是线性性，不是独立性。" },
   { id: "var", label: "方差与协方差", track: "prob", stage: 3,
     href: "/posts/probability-foundations/#5-方差与协方差", note: "「估计准不准」的第一个量化指标；t 统计量的分母。" },
   { id: "condx", label: "条件期望", sub: "E[X|Y]", track: "prob", stage: 3,
     href: "/posts/probability-foundations/#43-条件期望", note: "全期望公式是「拆层」的标准动作。" },
   { id: "ind", label: "指示函数", sub: "1{A}", track: "prob", stage: 3,
-    href: "/posts/bandits-series-intro/#72-指示函数", note: "把「第 t 轮选错了吗」变成一个 0/1 变量，regret 才写得出。" },
+    href: "/posts/bandits-series-intro/#82-指示函数", note: "把「第 t 轮选错了吗」变成一个 0/1 变量，regret 才写得出。" },
   { id: "bayes", label: "贝叶斯定理", sub: "P(θ|x) ∝ P(x|θ)P(θ)", track: "prob", stage: 3,
     href: "/posts/thompson-sampling/#34-一般形式", note: "第 4 篇整篇的地基；也是第 1 篇 MAP 规则的同一条式子。" },
 
@@ -157,6 +161,30 @@ export const NODES: GraphNode[] = [
     href: "/posts/thompson-sampling/#51-定理", note: "常数从 16 压到 2，正好贴住下界。" },
   { id: "lai", label: "Lai–Robbins 下界", sub: "log n / KL", track: "bandit", stage: 9,
     href: "/posts/thompson-sampling/#55-定理的边界为什么要先各试一次", note: "没有任何算法能比它更快；TS 的上界与它同阶。" },
+
+  // ---------- stage 10：状态与动作 ----------
+  { id: "state", label: "状态 s(t)", sub: "S, s(t)", track: "rl", stage: 10,
+    href: "/posts/reinforcement-learning/#2-四个对象与一个策略", note: "环境的摘要；bandit 只是 S 里只有一个元素。" },
+  { id: "policy", label: "策略 π", sub: "S → A", track: "rl", stage: 10,
+    href: "/posts/reinforcement-learning/#2-四个对象与一个策略", note: "「在哪个状态做什么」；随机策略是 TS 的多状态版本。" },
+  { id: "disc", label: "折扣因子 γ", sub: "Σγᵗ = 1/(1−γ)", track: "rl", stage: 10,
+    href: "/posts/reinforcement-learning/#3-目标期望总奖励以及为什么必须打折", note: "让无限长的未来有有限价值；有效视野 ≈ 1/(1−γ)。" },
+
+  // ---------- stage 11：转移与 MDP ----------
+  { id: "markov", label: "马尔可夫性", sub: "P(s'|s) 不记历史", track: "rl", stage: 11,
+    href: "/posts/reinforcement-learning/#6-马尔可夫性记忆只有一个状态", note: "未来只依赖当前状态；状态选得够不够用，就看这一条。" },
+  { id: "trans", label: "转移与转移矩阵", sub: "pᵃ(s'|s)，每行和为 1", track: "rl", stage: 11,
+    href: "/posts/reinforcement-learning/#7-mrp只给状态发奖励时的值", note: "动作有几张矩阵就有几张；bandit 里它是空的。" },
+  { id: "mdp", label: "MDP", sub: "(S, A, pᵃ, r, γ)", track: "rl", stage: 11,
+    href: "/posts/reinforcement-learning/#8-mdp把动作塞进转移矩阵", note: "把动作塞进转移：未来第一次可以由你的选择改变。" },
+
+  // ---------- stage 12：值函数与 Bellman ----------
+  { id: "vfun", label: "状态值函数 V", sub: "Vᵖ(s)", track: "rl", stage: 12,
+    href: "/posts/reinforcement-learning/#7-mrp只给状态发奖励时的值", note: "从 s 出发、按策略走能拿到的折扣回报期望。" },
+  { id: "qfun", label: "动作值函数 Q", sub: "Qᵖ(a,s)", track: "rl", stage: 12,
+    href: "/posts/reinforcement-learning/#9-q-函数把第一步单独拎出来", note: "把第一步动作钉死；要选动作时看它，不看 V。" },
+  { id: "bellman", label: "Bellman 方程", sub: "V = r + γPV", track: "rl", stage: 12,
+    href: "/posts/reinforcement-learning/#11-规划与学习同一组方程两种用法", note: "把无限和折成一步 + 剩下的无限和；带 max 就是最优方程。" },
 ];
 
 /* ------------------------------------------------------------------
@@ -245,6 +273,22 @@ export const EDGES: GraphEdge[] = [
   { from: "tsb", to: "lai", kind: "contrast", label: "上界贴住下界" },
   { from: "ucbT", to: "lai", kind: "contrast" },
   { from: "bigo", to: "lai", kind: "use", label: "同阶" },
+
+  // 强化学习：从「只有一个状态」到「动作改变状态」
+  { from: "ts", to: "state", kind: "contrast", label: "单状态 vs 有状态" },
+  { from: "state", to: "markov", kind: "req" },
+  { from: "state", to: "trans", kind: "req" },
+  { from: "state", to: "mdp", kind: "req" },
+  { from: "markov", to: "trans", kind: "use", label: "p(s'|s) 才良定义" },
+  { from: "trans", to: "mdp", kind: "req", label: "再加动作" },
+  { from: "disc", to: "vfun", kind: "req" },
+  { from: "policy", to: "vfun", kind: "req" },
+  { from: "trans", to: "vfun", kind: "req" },
+  { from: "mdp", to: "vfun", kind: "req" },
+  { from: "markov", to: "vfun", kind: "use", label: "最优策略只看当前状态" },
+  { from: "vfun", to: "qfun", kind: "req", label: "把第一步钉死" },
+  { from: "qfun", to: "bellman", kind: "req" },
+  { from: "policy", to: "qfun", kind: "use" },
 ];
 
 /* ------------------------------------------------------------------
@@ -256,7 +300,7 @@ export interface Chapter {
   slug: string;
   eyebrow: string;
   note: string;
-  tone: "math" | "prob" | "stat" | "bandit";
+  tone: "math" | "prob" | "stat" | "bandit" | "rl";
 }
 
 export const CHAPTERS: Chapter[] = [
@@ -274,6 +318,8 @@ export const CHAPTERS: Chapter[] = [
     note: "$16\log n/\Delta^2$ 与乐观原理" },
   { id: "ts", label: "第 4 篇 · Thompson", slug: "thompson-sampling", eyebrow: "第 4 篇", tone: "bandit",
     note: "贝叶斯后验、随机化探索、$2\log n/\Delta$" },
+  { id: "rl", label: "第 5 篇 · 强化学习", slug: "reinforcement-learning", eyebrow: "第 5 篇", tone: "rl",
+    note: "状态、MDP、$V$ 与 $Q$、Bellman 方程" },
 ];
 
 export const CHAPTER_EDGES: { from: string; to: string; label?: string }[] = [
@@ -283,6 +329,7 @@ export const CHAPTER_EDGES: { from: string; to: string; label?: string }[] = [
   { from: "hyp", to: "mab", label: "同一个贝叶斯模板" },
   { from: "mab", to: "ucb" },
   { from: "ucb", to: "ts" },
+  { from: "ts", to: "rl", label: "加回状态" },
 ];
 /* ------------------------------------------------------------------
    子图：某一篇正文自己的节点 + 它们的全部前置

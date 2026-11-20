@@ -179,7 +179,7 @@ $$\partial_p^{2}d(p,q)=\frac1p+\frac1{1-p}\Big|_{p=q}=\frac{1}{q(1-q)}.$$
 
 $$\sum_y\mathbb{E}[X\mid Y=y]\,\mathbb{P}(Y=y)=\sum_y\sum_x x\,\frac{\mathbb{P}(X=x,Y=y)}{\mathbb{P}(Y=y)}\mathbb{P}(Y=y)=\sum_x x\,\mathbb{P}(X=x)=\mathbb{E}X.$$
 
-**用在哪**：[导论 §7.1](/posts/bandits-series-intro/#71-期望与全期望)、[概率论基础 §4.3](/posts/probability-foundations/#43-条件期望)。
+**用在哪**：[导论 §8.1](/posts/bandits-series-intro/#81-期望与全期望)、[概率论基础 §4.3](/posts/probability-foundations/#43-条件期望)。
 
 ### C2 和的方差
 
@@ -365,6 +365,23 @@ $$R_n=\sum_i\Delta_iT_i(n)\le\sum_i\Delta_i\cdot\frac{16\log n}{\Delta_i^{2}}=16
 **为什么不在这里证**：完整证明需要「变化测度 + 后验集中」两套工具（对每个次优臂构造一个与真实分布 KL 距离有限的替代分布，再用后验以指数速度集中到真实参数的结论）。第 4 篇 §5.5 用 KL 解释了常数 $2$ 的来历，但没有展开这两步。
 
 **用在哪**：[第 4 篇 §5.1](/posts/thompson-sampling/#51-定理)。
+
+### E7 值迭代的收敛性（$\gamma$-压缩）
+
+**条件**：状态与动作都是有限集，$r$ 有界，$0\le\gamma<1$。
+
+**结论**：定义算子
+$$(TV)(s)=\max_{a}\left[r(a,s)+\gamma\sum_{s'}p^{a}_{s,s'}V(s')\right],$$
+则 $T$ 是 $\gamma$-压缩，$\lVert TV-TW\rVert_\infty\le\gamma\lVert V-W\rVert_\infty$；因此 $T$ 有唯一不动点 $V^*$，且从任意 $V_0$ 出发
+$$\lVert V_k-V^*\rVert_\infty\le\gamma^{k}\lVert V_0-V^*\rVert_\infty .$$
+
+**证明**：固定 $s$，设 $a^{\star}$ 是 $(TV)(s)$ 取到最大值的动作（有限集上最大值一定取到），则
+$$(TV)(s)-(TW)(s)\le\gamma\sum_{s'}p^{a^{\star}}_{s,s'}\big(V(s')-W(s')\big)\le\gamma\lVert V-W\rVert_\infty,$$
+第二步用了 $\sum_{s'}p^{a}_{s,s'}=1$。交换 $V,W$ 得到另一半，于是 $|(TV)(s)-(TW)(s)|\le\gamma\lVert V-W\rVert_\infty$，对 $s$ 取上确界即得压缩性。
+
+压缩映射在完备度量空间上有唯一不动点（Banach 不动点定理），而 Bellman 最优方程正是 $V=TV$ 的写法，所以不动点就是 $V^*$。把压缩不等式迭代 $k$ 次，即得误差界；$\gamma<1$ 时右端趋于 $0$。
+
+**用在哪**：[第 5 篇 §11](/posts/reinforcement-learning/#11-规划与学习同一组方程两种用法)。注意 $\gamma=1$ 的网格世界不在这个定理的范围内（它不是 $\gamma$-压缩），但因为存在吸收态、且每步都有代价，值迭代仍然有限步收敛——这是「随机最短路径」的情形，不在这里展开。
 
 ## F 没有在这里证明的
 

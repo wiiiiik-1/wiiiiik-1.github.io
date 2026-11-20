@@ -30,7 +30,7 @@ const NODE_H = compact ? 38 : 46;
 const PAD_X = compact ? 30 : 56;
 const PAD_Y = compact ? 58 : 96;
 
-const ORDER: Record<Track, number> = { math: 0, prob: 1, stat: 2, bandit: 3 };
+const ORDER: Record<Track, number> = { math: 0, prob: 1, stat: 2, bandit: 3, rl: 4 };
 
 const byStage = new Map<number, typeof NODES>();
 for (const node of nodes) {
@@ -324,6 +324,7 @@ const stageName = new Map(STAGES.map((item) => [item.stage, item.name]));
   .kg-dot--prob { background: var(--blue); }
   .kg-dot--stat { background: #3f6b52; }
   .kg-dot--bandit { background: var(--accent); }
+  .kg-dot--rl { background: #6b4a7a; }
 
   .kg-scroll {
     overflow-x: auto;
@@ -368,6 +369,7 @@ const stageName = new Map(STAGES.map((item) => [item.stage, item.name]));
   .kg-node--prob rect { stroke: var(--blue); }
   .kg-node--stat rect { stroke: #3f6b52; }
   .kg-node--bandit rect { stroke: var(--accent); }
+  .kg-node--rl rect { stroke: #6b4a7a; }
 
   .kg-node.is-own rect {
     fill: var(--accent-soft);

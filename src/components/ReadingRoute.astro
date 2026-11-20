@@ -7,15 +7,16 @@ interface Props {
 
 const { current = "" } = Astro.props;
 
-/* 三条带：入口（本页）在上，前置线在中，主线在下。
-   坐标全部在 viewBox 1060×430 里手算，改动条目数需要重算 x。 */
+/* 三条带：前置线在上，主线在中，第 5 篇单独一条在最下。
+   坐标全部在 viewBox 1080×560 里手算，改动条目数需要重算 x。 */
 const W = 1080;
-const H = 380;
+const H = 560;
 
 const NODE_W = 252;
 const NODE_H = 84;
 const PRE_Y = 58;
 const MAIN_Y = 268;
+const NEXT_Y = 452;
 
 const pre = CHAPTERS.slice(0, 3).map((chapter, index) => ({
   ...chapter,
@@ -25,7 +26,7 @@ const pre = CHAPTERS.slice(0, 3).map((chapter, index) => ({
   short: ["求和·不等式·KL", "公理→分布→极限", "估计·区间·检验"][index],
 }));
 
-const main = CHAPTERS.slice(3).map((chapter, index) => ({
+const main = CHAPTERS.slice(3, 7).map((chapter, index) => ({
   ...chapter,
   x: 60 + index * 258,
   y: MAIN_Y,
@@ -36,6 +37,18 @@ const main = CHAPTERS.slice(3).map((chapter, index) => ({
     "16log n/Δ² 与 UCB",
     "后验抽样与 2log n/Δ",
   ][index],
+}));
+
+/* 主线末端 → 第 5 篇：一条竖线，表示「同一条线继续往下」 */
+const mainEndCenter = main[3].x + main[3].w / 2;
+const dropPath = `M${mainEndCenter},${MAIN_Y + NODE_H} V${NEXT_Y - 8}`;
+
+const next = CHAPTERS.slice(7).map((chapter) => ({
+  ...chapter,
+  x: mainEndCenter - 126,
+  y: NEXT_Y,
+  w: 252,
+  short: "状态·MDP·V 与 Q",
 }));
 
 const preArrows = [0, 1].map((i) => {
@@ -52,6 +65,16 @@ const mainArrows = [0, 1, 2].map((i) => {
   return { d: `M${from + 6},${y} H${to - 10}`, ax: to - 10, ay: y };
 });
 
+/* 第 5 篇：单独一条带，从前置线下方横向排开 */
+const nextArrows = next.length > 1
+  ? next.slice(0, -1).map((node, i) => {
+      const from = node.x + node.w;
+      const to = next[i + 1].x;
+      const y = NEXT_Y + NODE_H / 2;
+      return { d: `M${from + 6},${y} H${to - 10}`, ax: to - 10, ay: y };
+    })
+  : [];
+
 /* 前置线末端 → 主线起点：一条回车线 */
 const mainCenter = main[0].x + main[0].w / 2;
 const returnPath = `M${pre[2].x + NODE_W / 2},${PRE_Y + NODE_H}
@@ -62,12 +85,12 @@ const returnPath = `M${pre[2].x + NODE_W / 2},${PRE_Y + NODE_H}
 
 <div class="route" data-route>
   <div class="route-head">
-    <h3>八篇怎么走</h3>
-    <p>上面是前置线，下面是主线。前置线只在需要时补，主线按顺序读；回车那根线表示「统计读完，从这里进入 bandits」。</p>
+    <h3>九篇怎么走</h3>
+    <p>上面是前置线，中间是主线，最下面是被主线带出来的第 5 篇。前置线只在需要时补，主线按顺序读；回车那根线表示「统计读完，从这里进入 bandits」。</p>
   </div>
 
   <div class="route-scroll">
-    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label="八篇笔记的阅读路线图">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label="九篇笔记的阅读路线图">
       <defs>
         <marker id="rr-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
           <path d="M0,0 L10,5 L0,10 z" class="rr-head" />
@@ -79,6 +102,9 @@ const returnPath = `M${pre[2].x + NODE_W / 2},${PRE_Y + NODE_H}
 
       <text x="60" y={`${MAIN_Y - 20}`} class="rr-lane">主线 · 四篇其实是一个问题</text>
       <path class="rr-line" d={`M60,${MAIN_Y + NODE_H + 2} H${main[3].x + main[3].w}`} />
+
+      <text x="60" y={`${NEXT_Y - 20}`} class="rr-lane">再往前 · 加回状态，问题就换了</text>
+      <path class="rr-line" d={`M60,${NEXT_Y + NODE_H + 2} H${next[0].x + next[0].w}`} />
 
       {pre.map((node) => (
         <a href={`/posts/${node.slug}/`} class="rr-node">
@@ -102,14 +128,29 @@ const returnPath = `M${pre[2].x + NODE_W / 2},${PRE_Y + NODE_H}
         </a>
       ))}
 
+      {next.map((node) => (
+        <a href={`/posts/${node.slug}/`} class="rr-node">
+          <g transform={`translate(${node.x}, ${node.y})`}>
+            <rect width={node.w} height={NODE_H} rx="9" class={`rr-card rr-card--${node.tone}`} />
+            <text x="16" y="26" class="rr-eyebrow">{node.eyebrow}</text>
+            <text x="16" y="50" class="rr-title">{node.label}</text>
+            <text x="16" y="70" class="rr-short">{node.short}</text>
+          </g>
+        </a>
+      ))}
+
       {preArrows.map((arrow) => (
         <path class="rr-link" d={arrow.d} marker-end="url(#rr-arrow)" />
       ))}
       {mainArrows.map((arrow) => (
         <path class="rr-link" d={arrow.d} marker-end="url(#rr-arrow)" />
       ))}
+      {nextArrows.map((arrow) => (
+        <path class="rr-link" d={arrow.d} marker-end="url(#rr-arrow)" />
+      ))}
 
       <path class="rr-return" d={returnPath} marker-end="url(#rr-arrow)" />
+      <path class="rr-link" d={dropPath} marker-end="url(#rr-arrow)" />
       <text
         x={mainCenter + 14}
         y={PRE_Y + NODE_H + 52}
@@ -120,6 +161,7 @@ const returnPath = `M${pre[2].x + NODE_W / 2},${PRE_Y + NODE_H}
 
   <p class="route-foot">
     时间紧：<a href="/posts/multi-armed-bandits-intro/">第 2 篇</a> 可以直接读，第 1 篇留到需要时补；
+    读完第 4 篇再往下，就是加了状态的 <a href="/posts/reinforcement-learning/">第 5 篇</a>。
     想知道每个概念依赖谁，看 <a href="/map/">知识拓扑</a>。
   </p>
 </div>
@@ -188,6 +230,7 @@ const returnPath = `M${pre[2].x + NODE_W / 2},${PRE_Y + NODE_H}
   .rr-card--prob { stroke: var(--blue); }
   .rr-card--stat { stroke: #3f6b52; }
   .rr-card--bandit { stroke: var(--accent); }
+  .rr-card--rl { stroke: #6b4a7a; }
 
   .rr-node { cursor: pointer; }
   .rr-node:hover .rr-card { fill: var(--paper-deep); }
