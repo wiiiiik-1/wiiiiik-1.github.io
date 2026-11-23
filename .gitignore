@@ -21,6 +21,7 @@ tmp/
 .tmp/
 work/
 refs/
+.archify/
 
 # migration scratch (pack 测试的假 home 里有凭据副本，绝不能提交)
 dsh-migrate/.tmp-packtest/
