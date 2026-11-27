@@ -3,7 +3,7 @@ import { render } from "astro:content";
 import BaseLayout from "./BaseLayout.astro";
 import Toc from "../components/Toc.astro";
 import KnowledgeMap from "../components/KnowledgeMap.astro";
-import ReadingRoute from "../components/ReadingRoute.astro";
+import PostsMap from "../components/PostsMap.astro";
 import { subgraphFor } from "../data/knowledge-graph";
 import type { Post } from "../utils";
 import { formatDate, readingTime } from "../utils";
@@ -71,7 +71,7 @@ const hasMap = subgraphFor(post.id).nodes.length > 0;
 
       {post.id === "bandits-series-intro" ? (
         <section class="post-map">
-          <ReadingRoute current={post.id} />
+          <PostsMap />
         </section>
       ) : (
         hasMap && (

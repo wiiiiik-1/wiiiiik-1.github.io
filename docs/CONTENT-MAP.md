@@ -1,7 +1,7 @@
 # 博客内容地图（给后续会话）
 
 > **用途**：让新的会话不必先读完 9 篇、约 17 万字符，就能知道这里**有什么、怎么写的、还能补什么**。
-> **最后更新**：2026-11-20（新增第 5 篇强化学习 + 4 张图解 + 附录 E7；导论加「第四层」并重编章节号）
+> **最后更新**：2026-11-27（「九篇怎么走」改用 archify 生成 + 内联 SVG，导论与 `/map/` 共用；删掉 ReadingRoute）
 > **状态**：本地 = 远端 = 已部署，CI 全绿。
 
 ---
@@ -215,7 +215,7 @@
 4. 结尾补五件套；
 5. **回来改导论**：描述、入口段、第 7 节的地图与篇目表、第 9 节的阅读路线；**若插入新的一层，还要给后面所有节号 +1**（2026-11-20 加「第四层」时就是 5→6 … 8→9，顺带把 `knowledge-graph.ts` 里指向导论的 `#71-` / `#72-` 改成 `#81-` / `#82-`）；
 6. 若在系列中间插入，改前后两篇的「系列位置」；
-7. 若这一篇要单独出现在 `/map/`：往 `NODES` 加节点、往 `CHAPTERS` 加一章；导论的 `ReadingRoute` 按 `CHAPTERS.slice(3, 7)` / `slice(7)` 分带，**第 6 篇要重算 `1080×560` 的坐标和第三带**（`src/components/ReadingRoute.astro` 顶部注释里有说明）。
+7. 若这一篇要单独出现在 `/map/`：往 `NODES` 加节点、往 `CHAPTERS` 加一章；「九篇怎么走」那张图由 archify 生成，改完 `CHAPTERS` 要重新跑一遍 `scripts/map/` 的两步（见该目录 README），否则图上少一个新篇目。
 
 **加一张图解**
 1. 在 `scripts/figures/make-figures.py` 加函数 → 注册进 `FIGURES`；
@@ -231,7 +231,7 @@
 4. 改完 build 一次，跑一遍「锚点全量校验」（读 `dist` 里的 html，逐个 `href` 查 `id="…"` 是否存在）。
 5. **节点的「归属篇目」由 `href` 决定**：`postSlugOf()` 从 `href` 里取 `/posts/<slug>/`，`subgraphFor()` 再把该篇节点与 1–2 级前置一起取出。所以把某个节点的 `href` 从一个章节挪到另一个章节，会同时改变它出现在哪一篇的子图里（`bigo`、`tail`、`kl` 就是这样从导论/第 4 篇挪到数学工具箱的）。
 6. **每篇正文的子图是自动的**：`PostLayout` 末尾渲染 `<KnowledgeMap post={post.id} compact />`，先取 2 级前置，节点超过 18 个就退回 1 级。朱砂色填充的是「本篇直接讲」的节点。**新增一篇带节点的文章不需要改 PostLayout**，往 `NODES` 加节点即可。
-7. **导论是例外**：它在 `PostLayout` 里被写死成 `post.id === "bandits-series-intro"` 时渲染 `<ReadingRoute />`（`src/components/ReadingRoute.astro`）——一张「九篇怎么走」的路线图，**三条带**：上面是前置线（数学/概率/统计），中间是主线（第 1–4 篇），最下面是被主线带出来的第 5 篇；两根竖/回车线分别是「统计读完 → 第 1 篇」和「第 4 篇 → 第 5 篇」。坐标按 `CHAPTERS` 的 `slice(0,3)` / `slice(3,7)` / `slice(7)` 手算在 `1080×560` 的 viewBox 里，**增删篇目要重算 x 与 viewBox 高度**。
+7. **导论很特殊**：`PostLayout` 里当 `post.id === "bandits-series-intro"` 时渲染 `<PostsMap />`，`/map/` 的「篇与篇之间」用同一个组件的 `wide` 模式。这张「九篇怎么走」**不是手写 SVG 了**：由 archify 生成、`scripts/map/extract-diagram.mjs` 抽成自包含的 `src/assets/posts-map.svg`（27 KB，含浅/深两套配色，节点被包成 `<a>` 可点）。改篇目后要重跑那条两步流水线，见 [scripts/map/README.md](../../scripts/map/README.md)。
 
 **改公式/文字**
 - 只动 `.md`，push 即可；CI 会自动重建。

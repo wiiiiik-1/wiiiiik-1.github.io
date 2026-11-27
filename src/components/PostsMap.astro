@@ -1,0 +1,67 @@
+---
+// 九篇笔记的路线图：由 archify 生成、scripts/map/extract-diagram.mjs 抽成自包含 SVG。
+// 节点在提取时已被包成 <a href="/posts/<slug>/">，所以可以直接点进文章。
+// 重新生成：见 scripts/map/README.md
+import raw from "../assets/posts-map.svg?raw";
+
+interface Props {
+  /** 用在 /map/ 时给足宽度；用在正文里时固定 1000px 并允许横向拖动 */
+  wide?: boolean;
+}
+
+const { wide = false } = Astro.props;
+---
+
+<figure class:list={["posts-map", wide && "posts-map--wide"]}>
+  <h3 class="posts-map-title">九篇怎么走</h3>
+  <div class="posts-map-scroll" set:html={raw} />
+  <figcaption class="posts-map-foot">
+    上面是前置三章，中间是主线四篇，下面是加回状态的第 5 篇。方块可以直接点进对应文章。
+    {wide ? (
+      <>完整的 54 个知识点依赖图在下面，那份可以按轨道筛选、悬停看邻居。</>
+    ) : (
+      <>图比较宽，可以左右拖动；完整的 54 个知识点依赖图在 <a href="/map/">知识拓扑</a>。</>
+    )}
+  </figcaption>
+</figure>
+
+<style>
+  .posts-map {
+    margin: 1.6rem 0 2rem;
+  }
+
+  .posts-map-title {
+    margin: 0 0 0.5rem;
+    font-size: 1rem;
+  }
+
+  .posts-map-scroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.2rem 0 0.4rem;
+  }
+
+  .posts-map-scroll :global(svg#posts-map) {
+    display: block;
+    width: 1000px;
+    max-width: none;
+    height: auto;
+  }
+
+  .posts-map--wide .posts-map-scroll :global(svg#posts-map) {
+    width: 100%;
+    min-width: 720px;
+    max-width: 100%;
+  }
+
+  .posts-map-foot {
+    margin: 0.6rem 0 0;
+    font-size: 0.8rem;
+    line-height: 1.6;
+    color: var(--muted);
+  }
+
+  .posts-map-foot a {
+    color: var(--accent);
+  }
+</style>

@@ -182,10 +182,11 @@ https://wiiiiik-1.github.io/lecture-notes/
 ```text
 .
 ├─ src/
-│  ├─ components/          # Header、Footer、PostCard、Toc
+│  ├─ assets/              # posts-map.svg（archify 生成的「九篇怎么走」）
+│  ├─ components/          # Header、Footer、PostCard、Toc、KnowledgeMap、PostsMap
 │  ├─ content/posts/       # 所有 Markdown 笔记
 │  ├─ layouts/             # BaseLayout、PostLayout
-│  ├─ pages/               # 首页、文章、标签、归档、关于、RSS
+│  ├─ pages/               # 首页、文章、标签、归档、关于、RSS、知识拓扑
 │  ├─ styles/global.css    # Ink & Paper 主题
 │  ├─ config.ts            # 站点名、导航、GitHub 地址
 │  ├─ content.config.ts    # frontmatter schema
@@ -196,6 +197,7 @@ https://wiiiiik-1.github.io/lecture-notes/
 ├─ scripts/
 │  ├─ new-note.mjs         # npm run new 用的新建笔记脚本
 │  ├─ figures/             # 图解生成（Python + matplotlib）
+│  ├─ map/                 # 「九篇怎么走」：archify 导出 + 抽成内联 SVG
 │  └─ sim/                 # 文章里引用的数值实验
 ├─ docs/
 │  └─ CONTENT-MAP.md       # 内容地图：每篇讲什么、还没补什么（给后续会话看）

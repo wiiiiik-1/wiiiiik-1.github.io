@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import KnowledgeMap from "../components/KnowledgeMap.astro";
+import PostsMap from "../components/PostsMap.astro";
 import {
   CHAPTERS,
   CHAPTER_EDGES,
@@ -79,26 +80,11 @@ const routes = [
         <p class="section-note">主链 + 一条旁路</p>
       </div>
 
-      <div class="chapter-rail">
-        {CHAPTERS.map((chapter, index) => (
-          <div class="chapter-cell">
-            <a class={`chapter-card chapter-card--${chapter.tone}`} href={`/posts/${chapter.slug}/`}>
-              <span class="chapter-eyebrow">{chapter.eyebrow}</span>
-              <span class="chapter-name">{chapter.label}</span>
-              <span class="chapter-note">{chapter.note}</span>
-            </a>
-            {index < CHAPTERS.length - 1 && (
-              <span class="chapter-arrow" aria-hidden="true">
-                {CHAPTER_EDGES[index]?.label ?? "→"}
-              </span>
-            )}
-          </div>
-        ))}
-      </div>
+      <PostsMap wide />
 
       <p class="chapter-foot">
         导论 <a href="/posts/bandits-series-intro/">《从一道暴雨预警开始》</a> 不属于主链，
-        它把上面七篇的动机串起来，随时可以插进来读。
+        它把上面这些篇的动机串起来，随时可以插进来读。
       </p>
     </section>
 
@@ -205,73 +191,6 @@ const routes = [
 
 <style>
   .map-lead { margin-bottom: 2.6rem; }
-
-  .chapter-rail {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.7rem;
-    align-items: stretch;
-  }
-
-  .chapter-cell {
-    display: flex;
-    align-items: center;
-    gap: 0.7rem;
-  }
-
-  .chapter-card {
-    display: flex;
-    flex-direction: column;
-    gap: 0.2rem;
-    width: 176px;
-    padding: 0.7rem 0.8rem 0.75rem;
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    background: var(--paper-lift);
-    text-decoration: none;
-    box-shadow: var(--shadow-sm);
-    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-  }
-
-  .chapter-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-    border-color: var(--line-strong);
-  }
-
-  .chapter-card--math { border-top: 3px solid #a67c48; }
-  .chapter-card--prob { border-top: 3px solid var(--blue); }
-  .chapter-card--stat { border-top: 3px solid #3f6b52; }
-  .chapter-card--bandit { border-top: 3px solid var(--accent); }
-
-  .chapter-eyebrow {
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 0.08em;
-    color: var(--faint);
-  }
-
-  .chapter-name {
-    font-weight: 600;
-    font-size: 0.92rem;
-    color: var(--ink);
-    line-height: 1.35;
-  }
-
-  .chapter-note {
-    font-size: 0.74rem;
-    color: var(--muted);
-    line-height: 1.45;
-  }
-
-  .chapter-arrow {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--faint);
-    max-width: 64px;
-    line-height: 1.3;
-    text-align: center;
-  }
 
   .chapter-foot {
     margin-top: 0.9rem;
@@ -413,9 +332,4 @@ const routes = [
   [data-theme="dark"] .track-tag--math { background: #33291d; color: #d6b78a; }
   [data-theme="dark"] .track-tag--stat { background: #1e2b22; color: #8fb99a; }
 
-  @media (max-width: 720px) {
-    .chapter-card { width: 100%; }
-    .chapter-cell { flex-direction: column; align-items: stretch; width: 100%; }
-    .chapter-arrow { display: none; }
-  }
 </style>

@@ -158,16 +158,18 @@ function buildPosts() {
 
   const connections = CHAPTER_EDGES.map((edge, i) => {
     const item = { id: `c${i}`, from: edge.from, to: edge.to };
-    if (edge.label) item.label = edge.label;
+    // 「同一个贝叶斯模板」这块标签会被排到第 1 篇与第 2 篇之间，读起来像在说
+    // 第1篇→第2篇的箭头；所以这条边的文字挪进卡片，图上只留线。
+    if (edge.label && !(edge.from === "stat" && edge.to === "hyp")) item.label = edge.label;
     // 前置线末端 → 主线起点是一条「回车线」：从 stat 底部下来、横穿到 hyp 顶部再落下。
     // 不写 via 的话自动路由会绕到 hyp 的右侧、箭头朝左，看起来像第 2 篇 → 第 1 篇。
     if (edge.from === "stat" && edge.to === "hyp") {
       const [sx] = posOf("stat");
-      const [hx] = posOf("hyp");
+      // 从 stat 底部下来，沿左侧空白走，再从第 1 篇左边进去；
+      // 走「顶部进入」会正好穿过 region 的标签「主线 · 四篇其实是一个问题」。
       item.fromSide = "bottom";
-      item.toSide = "top";
-      item.via = [[sx + W / 2, 300], [hx + W / 2, 300]];
-      // 标签钉在横穿那一段（segment 1）上；自动放置会把它甩到两篇之间
+      item.toSide = "left";
+      item.via = [[sx + W / 2, 300], [40, 300], [40, 423]];
       item.labelSegment = 1;
       item.labelDy = -12;
     }
@@ -218,8 +220,11 @@ function buildPosts() {
       },
       {
         dot: "cyan",
-        title: "这一版没有的东西",
-        items: ["不能点进小节：architecture 类型不带超链接", "站内 /map/ 仍是可点的 SVG 版本"],
+        title: "两处连接的理由",
+        items: [
+          "同一个贝叶斯模板：第 1 篇的四格表与 bandit 的决策，用的是同一条后验式子",
+          "加回状态：第 5 篇把「每次都是同一个问题」这条假设拆掉",
+        ],
       },
     ],
   };
